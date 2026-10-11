@@ -1,26 +1,108 @@
 @import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0A0A0C;
+  --foreground: #F4F4F6;
+  --surface: #141418;
+  --surface-high: #1B1B22;
+  --border: #24242B;
+  --primary: #CCFF00;
+  --cyan: #00F0FF;
+  --hazard: #FF0055;
+  --muted: #8E8E9F;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  user-select: none;
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0C;
+}
+::-webkit-scrollbar-thumb {
+  background: #24242B;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #CCFF00;
+}
+
+/* MapLibre 3D WebGL Canvas Container Overrides */
+.maplibregl-map {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #0A0A0C !important;
+  font-family: inherit;
+}
+
+.maplibregl-canvas {
+  outline: none !important;
+}
+
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-logo {
+  display: none !important;
+}
+
+/* Radar Sweep Animation */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-sweep-beam {
+  animation: radar-sweep 7s linear infinite;
+}
+
+/* Sonar Pulse Animations for Drops */
+@keyframes beacon-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.95;
+  }
+  60% {
+    transform: scale(2.2);
+    opacity: 0.15;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.beacon-sonar-ring {
+  animation: beacon-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Subtle Cyber Grid Overlay for Radar View */
+.radar-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(204, 255, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(204, 255, 0, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Smooth fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+

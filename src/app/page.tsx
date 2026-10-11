@@ -1,69 +1,220 @@
-import Image from "next/image";
+'use client';
+
+import React from 'react';
+import dynamic from 'next/dynamic';
+import { useSideQuestStore } from '@/lib/store';
+import { METRO_CITIES } from '@/lib/constants';
+import QuestsFeed from '@/components/drops/QuestsFeed';
+import BentoProfile from '@/components/profile/BentoProfile';
+import DropModal from '@/components/drops/DropModal';
+import CreateDropSheet from '@/components/drops/CreateDropSheet';
+import ShareModal from '@/components/drops/ShareModal';
+import AuthModal from '@/components/auth/AuthModal';
+import { 
+  Compass, ListFilter, User, Zap, ChevronDown 
+} from 'lucide-react';
+
+// Dynamic import with SSR disabled for MapLibre WebGL canvas
+const MetroMap = dynamic(() => import('@/components/map/MetroMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full min-h-[450px] bg-[#0A0A0C] flex flex-col items-center justify-center font-mono text-xs text-[#CCFF00] gap-2">
+      <Zap className="w-6 h-6 animate-bounce fill-current" />
+      <span className="tracking-widest">LOADING RADAR MESH...</span>
+    </div>
+  )
+});
 
 export default function Home() {
+  const {
+    selectedCity,
+    setSelectedCity,
+    selectedCategory,
+    setSelectedCategory,
+    isGirlsOnlyFilter,
+    toggleGirlsOnlyFilter,
+    activeTab,
+    setActiveTab,
+    setCreateSheetOpen,
+    drops
+  } = useSideQuestStore();
+
+  const cityDropsCount = drops.filter(d => d.cityId === selectedCity.id).length;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="relative flex flex-col h-screen w-screen overflow-hidden bg-[#0A0A0C] text-[#F4F4F6]">
+      
+      {/* Top Bar Header */}
+      <header className="relative z-20 flex flex-col border-b border-[#24242B] bg-[#0E0E12]/95 backdrop-blur-md px-4 py-2.5">
+        <div className="flex items-center justify-between">
+          
+          {/* Logo & Metro City Selector */}
+          <div className="flex items-center gap-2">
+            <span className="font-mono font-black text-sm text-[#CCFF00] tracking-wider flex items-center gap-1">
+              <Zap className="w-4 h-4 fill-current" /> SIDEQUEST
+            </span>
+
+            <div className="relative group">
+              <select
+                value={selectedCity.id}
+                onChange={e => setSelectedCity(e.target.value)}
+                className="appearance-none pl-2.5 pr-6 py-1 rounded-full bg-[#141418] border border-[#24242B] text-xs font-mono text-[#F4F4F6] hover:border-[#CCFF00] transition-colors cursor-pointer outline-none"
+              >
+                {METRO_CITIES.map(city => (
+                  <option key={city.id} value={city.id} className="bg-[#141418] text-[#F4F4F6]">
+                    📍 {city.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3 h-3 text-[#8E8E9F] absolute right-2 top-2 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Active Flares Telemetry Pill */}
+          <div className="flex items-center gap-2">
+            <div className="px-2.5 py-0.5 rounded-full bg-[#CCFF00]/10 border border-[#CCFF00]/30 text-[#CCFF00] font-mono font-bold text-[11px] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-ping" />
+              🔥 {cityDropsCount} FLARES
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Filter Pills (Horizontal Scroll) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 pb-0.5">
+          <button
+            onClick={() => setSelectedCategory('ALL')}
+            className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all border ${
+              selectedCategory === 'ALL'
+                ? 'bg-[#CCFF00] text-[#0A0A0C] border-[#CCFF00] font-bold shadow-[0_0_10px_rgba(204,255,0,0.3)]'
+                : 'bg-[#141418] text-[#8E8E9F] border-[#24242B] hover:text-[#F4F4F6]'
+            }`}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            ⚡ All Flares
+          </button>
+          
+          <button
+            onClick={() => setSelectedCategory('CHAI_FOOD')}
+            className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all border ${
+              selectedCategory === 'CHAI_FOOD'
+                ? 'bg-[#CCFF00] text-[#0A0A0C] border-[#CCFF00] font-bold'
+                : 'bg-[#141418] text-[#8E8E9F] border-[#24242B] hover:text-[#F4F4F6]'
+            }`}
           >
-            Documentation
-          </a>
+            🧋 Chai & Food
+          </button>
+
+          <button
+            onClick={() => setSelectedCategory('SPORTS')}
+            className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all border ${
+              selectedCategory === 'SPORTS'
+                ? 'bg-[#CCFF00] text-[#0A0A0C] border-[#CCFF00] font-bold'
+                : 'bg-[#141418] text-[#8E8E9F] border-[#24242B] hover:text-[#F4F4F6]'
+            }`}
+          >
+            🏸 Sports & Turf
+          </button>
+
+          <button
+            onClick={() => setSelectedCategory('COWORK_DEV')}
+            className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all border ${
+              selectedCategory === 'COWORK_DEV'
+                ? 'bg-[#CCFF00] text-[#0A0A0C] border-[#CCFF00] font-bold'
+                : 'bg-[#141418] text-[#8E8E9F] border-[#24242B] hover:text-[#F4F4F6]'
+            }`}
+          >
+            💻 Dev & Cowork
+          </button>
+
+          <button
+            onClick={() => setSelectedCategory('GIGS_CULTURE')}
+            className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all border ${
+              selectedCategory === 'GIGS_CULTURE'
+                ? 'bg-[#CCFF00] text-[#0A0A0C] border-[#CCFF00] font-bold'
+                : 'bg-[#141418] text-[#8E8E9F] border-[#24242B] hover:text-[#F4F4F6]'
+            }`}
+          >
+            🎭 Gigs & Culture
+          </button>
+
+          {/* Girls Only 🌸 Tag */}
+          <button
+            onClick={toggleGirlsOnlyFilter}
+            className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all border flex items-center gap-1 ${
+              isGirlsOnlyFilter
+                ? 'bg-[#FF007A] text-white border-[#FF007A] font-bold shadow-[0_0_10px_rgba(255,0,122,0.4)]'
+                : 'bg-[#141418] text-[#FF007A] border-[#FF007A]/30 hover:border-[#FF007A]'
+            }`}
+          >
+            🌸 Girls Only
+          </button>
         </div>
-      </main>
-    </div>
+      </header>
+
+      {/* Main Content Area */}
+      <div className="relative flex-1 w-full min-h-0 overflow-hidden pb-14">
+        {activeTab === 'radar' && <MetroMap />}
+        {activeTab === 'quests' && (
+          <div className="h-full overflow-y-auto">
+            <QuestsFeed />
+          </div>
+        )}
+        {activeTab === 'profile' && (
+          <div className="h-full overflow-y-auto">
+            <BentoProfile />
+          </div>
+        )}
+      </div>
+
+      {/* Persistent Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-4 py-2 bg-[#0E0E12]/95 backdrop-blur-md border-t border-[#24242B]">
+        
+        {/* Radar Tab */}
+        <button
+          onClick={() => setActiveTab('radar')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono transition-colors ${
+            activeTab === 'radar' ? 'text-[#CCFF00] font-bold' : 'text-[#8E8E9F] hover:text-[#F4F4F6]'
+          }`}
+        >
+          <Compass className="w-5 h-5" />
+          <span>Radar</span>
+        </button>
+
+        {/* Center Prominent Glowing "Drop Flare" Button */}
+        <button
+          onClick={() => setCreateSheetOpen(true)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#CCFF00] hover:bg-[#b8e600] text-[#0A0A0C] font-mono font-bold text-xs shadow-[0_0_18px_rgba(204,255,0,0.4)] transition-all hover:scale-105"
+        >
+          <Zap className="w-4 h-4 fill-current" /> DROP A FLARE
+        </button>
+
+        {/* Quests Feed Tab */}
+        <button
+          onClick={() => setActiveTab('quests')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono transition-colors ${
+            activeTab === 'quests' ? 'text-[#CCFF00] font-bold' : 'text-[#8E8E9F] hover:text-[#F4F4F6]'
+          }`}
+        >
+          <ListFilter className="w-5 h-5" />
+          <span>Feed ({cityDropsCount})</span>
+        </button>
+
+        {/* Bento Profile Tab */}
+        <button
+          onClick={() => setActiveTab('profile')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono transition-colors ${
+            activeTab === 'profile' ? 'text-[#CCFF00] font-bold' : 'text-[#8E8E9F] hover:text-[#F4F4F6]'
+          }`}
+        >
+          <User className="w-5 h-5" />
+          <span>Profile</span>
+        </button>
+      </nav>
+
+      {/* Modals & Bottom Sheets */}
+      <DropModal />
+      <CreateDropSheet />
+      <ShareModal />
+      <AuthModal />
+    </main>
   );
 }
