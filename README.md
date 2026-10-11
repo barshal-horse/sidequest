@@ -3,20 +3,18 @@
 # ⚡ SIDEQUEST // SPONTANEOUS IRL PLANS
 ### *An Anti-Social-Media Meetup Radar Built for Gen Z Across Indian Metros*
 
-[![Live Demo](https://img.shields.io/badge/LIVE_DEPLOYMENT-VERCEL-CCFF00?style=for-the-badge&logo=vercel&logoColor=black)](https://sidequest-app.vercel.app)
+[![GitHub Repo](https://img.shields.io/badge/GITHUB-barshal--horse%2Fsidequest-CCFF00?style=for-the-badge&logo=github&logoColor=black)](https://github.com/barshal-horse/sidequest)
+[![Deploy with Vercel](https://img.shields.io/badge/DEPLOY-ON_VERCEL-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/new/clone?repository-url=https://github.com/barshal-horse/sidequest)
 [![Next.js 16](https://img.shields.io/badge/Next.js_16-Turbopack-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React_19-Server_Components-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![MapLibre 3D](https://img.shields.io/badge/3D_Vector_Map-OpenFreeMap-00F0FF?style=for-the-badge&logo=webgl&logoColor=black)](https://openfreemap.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-CCFF00?style=for-the-badge)](LICENSE)
 
 <br />
 
-```
-   ┌──────────────────────────────────────────────────────────────┐
-   │  RADAR ACTIVE // 7 INDIAN METROS // ZERO-FLAKE IRL PROTOCOL   │
-   │  [BLR] Koramangala 5th  •  [BOM] Carter Road  •  [DEL] HKV   │
-   └──────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <kbd><b>⚡ RADAR STATUS: ACTIVE</b></kbd> &bull; <code>7 INDIAN METROS</code> &bull; <kbd><b>ZERO-FLAKE PROTOCOL</b></kbd><br /><br />
+  <code>[BLR] Koramangala 5th</code> &nbsp;&bull;&nbsp; <code>[BOM] Carter Road</code> &nbsp;&bull;&nbsp; <code>[DEL] Hauz Khas</code> &nbsp;&bull;&nbsp; <code>[PUN] FC Road</code>
+</p>
 
 <img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=1200&auto=format&fit=crop&q=80" alt="SideQuest Banner" width="100%" style="border-radius: 12px; border: 2px solid #24242B;" />
 
@@ -25,7 +23,7 @@
   Drop a 90-minute self-destructing Flare for chai, sports, vibe-coding, or gigs. Verified by GPS anti-flake karma.
 </p>
 
-[**🚀 Explore Live App**](https://sidequest-app.vercel.app) • [**⚡ Features**](#-key-features) • [**🗺️ Supported Metros**](#-7-supported-metros) • [**🛠️ Tech Stack**](#-tech-stack-0-monthly-cost) • [**🏃 Quickstart**](#-run-locally)
+[**⚡ 1-Click Deploy on Vercel**](https://vercel.com/new/clone?repository-url=https://github.com/barshal-horse/sidequest) &bull; [**📂 GitHub Repository**](https://github.com/barshal-horse/sidequest) &bull; [**🗺️ Supported Metros**](#-7-supported-metros) &bull; [**🛠️ Tech Stack**](#-tech-stack-0-monthly-cost) &bull; [**🏃 Quickstart**](#-run-locally)
 
 ---
 
