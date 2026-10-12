@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
-  X, ShieldCheck, Music, Award, Sparkles, Zap, MessageSquare, CheckCircle2, Flame 
+  X, ShieldCheck, Music, Award, Sparkles, Zap, MessageSquare, CheckCircle2, Flame, ExternalLink, Camera 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playRadarBlip, playCheckInChime } from '@/lib/audio';
@@ -155,31 +155,70 @@ export default function MemberProfileModal() {
           </span>
         </div>
 
-        {/* Audio Aura // Spotify */}
-        <div className="p-4 rounded-xl bg-[#141418] border border-[#24242B] space-y-2">
-          <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-[#8E8E9F] flex items-center gap-1.5 font-bold">
-              <Music className="w-3.5 h-3.5 text-[#1DB954]" /> AUDIO AURA
+        {/* Audio Aura // Spotify (Optional Display) */}
+        {inspectedMember.currentRotation ? (
+          <div className="p-4 rounded-xl bg-[#141418] border border-[#24242B] space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-[#8E8E9F] flex items-center gap-1.5 font-bold">
+                <Music className="w-3.5 h-3.5 text-[#1DB954]" /> AUDIO AURA
+              </span>
+              <a
+                href={`https://open.spotify.com/search/${encodeURIComponent(inspectedMember.currentRotation)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#1DB954] hover:underline text-[10px] font-bold flex items-center gap-1"
+              >
+                <span>OPEN SPOTIFY</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <div className="text-xs font-mono text-[#F4F4F6] font-bold">
+              {inspectedMember.currentRotation}
+            </div>
+
+            {inspectedMember.spotifyTopArtists && inspectedMember.spotifyTopArtists.length > 0 && (
+              <div className="text-[11px] font-mono text-[#8E8E9F]">
+                Top Artists: {inspectedMember.spotifyTopArtists.join(', ')}
+              </div>
+            )}
+
+            {inspectedMember.audioAura && (
+              <div className="inline-block px-2 py-0.5 rounded bg-[#1B1B22] border border-[#24242B] text-[10px] font-mono text-[#CCFF00]">
+                {inspectedMember.audioAura}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-3 rounded-xl bg-[#141418] border border-[#24242B] flex items-center justify-between text-xs font-mono">
+            <span className="text-[#8E8E9F] flex items-center gap-1.5">
+              <Music className="w-3.5 h-3.5 text-[#8E8E9F]" /> No Spotify Linked
             </span>
-            <span className="text-[#1DB954] text-[10px] font-bold">LIVE ON SPOTIFY</span>
+            <span className="text-[10px] text-[#CCFF00]">Focused on IRL Sidequests ⚡</span>
           </div>
+        )}
 
-          <div className="text-xs font-mono text-[#F4F4F6] font-bold">
-            {inspectedMember.currentRotation || 'Listening to underground electronics'}
+        {/* Member's Scrapbook Memories Preview if present */}
+        {inspectedMember.scrapbookMemories && inspectedMember.scrapbookMemories.length > 0 && (
+          <div className="p-3.5 rounded-xl bg-[#141418] border border-[#24242B] space-y-2">
+            <span className="text-xs font-mono font-bold text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5">
+              <Camera className="w-3.5 h-3.5 text-[#00F0FF]" /> RECENT POLAROID MEMORY
+            </span>
+            <div className="p-2 rounded-xl bg-white text-[#0A0A0C] font-mono shadow-md rotate-1">
+              <img 
+                src={inspectedMember.scrapbookMemories[0].photoUrl} 
+                alt="Memory" 
+                className="w-full h-24 object-cover rounded-lg"
+              />
+              <div className="pt-1.5 text-center">
+                <span className="text-[11px] font-bold block truncate">{inspectedMember.scrapbookMemories[0].title}</span>
+                <span className="text-[9px] text-[#606070] block truncate">
+                  {inspectedMember.scrapbookMemories[0].locationName} • {inspectedMember.scrapbookMemories[0].vibeTag}
+                </span>
+              </div>
+            </div>
           </div>
-
-          {inspectedMember.spotifyTopArtists && (
-            <div className="text-[11px] font-mono text-[#8E8E9F]">
-              Top Artists: {inspectedMember.spotifyTopArtists.join(', ')}
-            </div>
-          )}
-
-          {inspectedMember.audioAura && (
-            <div className="inline-block px-2 py-0.5 rounded bg-[#1B1B22] border border-[#24242B] text-[10px] font-mono text-[#CCFF00]">
-              {inspectedMember.audioAura}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Street Cred Badges */}
         {inspectedMember.badges && inspectedMember.badges.length > 0 && (

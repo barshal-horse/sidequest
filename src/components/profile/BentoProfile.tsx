@@ -8,7 +8,7 @@ import {
   Search, Shuffle, SlidersHorizontal 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { DEMO_PROFILES, generateRandomPersona, GEN_Z_VIBE_TAGS, LIVE_STATUS_OPTIONS } from '@/lib/constants';
+import { DEMO_PROFILES, generateRandomPersona, GEN_Z_VIBE_TAGS, LIVE_STATUS_OPTIONS, DEFAULT_SCRAPBOOK_MEMORIES } from '@/lib/constants';
 import { playRadarBlip, playCheckInChime } from '@/lib/audio';
 
 export default function BentoProfile() {
@@ -16,6 +16,9 @@ export default function BentoProfile() {
     currentUser, 
     setCreateSheetOpen, 
     setAuthModalOpen, 
+    setSpotifyModalOpen,
+    setScrapbookModalOpen,
+    disconnectSpotify,
     switchProfile,
     resetToNewIndividual,
     selectedCity,
@@ -272,39 +275,103 @@ export default function BentoProfile() {
       {/* Bento Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         
-        {/* Bento 1 (Large - Audio Aura) */}
+        {/* Bento 1 (Large - Audio Aura with Optional Connect/Disconnect) */}
         <div className="sm:col-span-2 p-4 rounded-2xl bg-[#141418] border border-[#24242B] relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-mono font-bold text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5">
-              <Music className="w-3.5 h-3.5 text-[#1DB954]" /> AUDIO AURA // SPOTIFY HI-FI
-            </span>
-            <div className="flex items-end gap-1 h-3">
-              <span className="w-1 bg-[#1DB954] h-full animate-pulse" />
-              <span className="w-1 bg-[#1DB954] h-2 animate-pulse delay-75" />
-              <span className="w-1 bg-[#1DB954] h-3 animate-pulse delay-150" />
-            </div>
-          </div>
+          {currentUser.isSpotifyConnected && currentUser.currentRotation ? (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-mono font-bold text-[#F4F4F6] uppercase tracking-wider flex items-center gap-1.5">
+                  <Music className="w-3.5 h-3.5 text-[#1DB954]" /> AUDIO AURA // LIVE ON SPOTIFY
+                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-end gap-1 h-3">
+                    <span className="w-1 bg-[#1DB954] h-full animate-pulse" />
+                    <span className="w-1 bg-[#1DB954] h-2 animate-pulse delay-75" />
+                    <span className="w-1 bg-[#1DB954] h-3 animate-pulse delay-150" />
+                  </div>
+                  <span className="text-[10px] font-mono text-[#1DB954] font-bold">STREAMING</span>
+                </div>
+              </div>
 
-          <div className="space-y-1">
-            <div className="text-xs font-mono text-[#F4F4F6] font-bold">
-              {currentUser.currentRotation || 'Fred again.. - adore u'}
-            </div>
-            <div className="text-[11px] font-mono text-[#8E8E9F]">
-              Top Artists: {currentUser.spotifyTopArtists?.join(', ')}
-            </div>
-          </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="space-y-1">
+                  <div className="text-sm font-mono text-[#F4F4F6] font-bold">
+                    {currentUser.currentRotation}
+                  </div>
+                  {currentUser.spotifyTopArtists && currentUser.spotifyTopArtists.length > 0 && (
+                    <div className="text-[11px] font-mono text-[#8E8E9F]">
+                      Top Artists: {currentUser.spotifyTopArtists.join(', ')}
+                    </div>
+                  )}
+                  <div className="text-[10px] font-mono text-[#8E8E9F]">
+                    Aura: <span className="text-[#CCFF00] font-bold">{currentUser.audioAura || 'Late-Night Lo-Fi'}</span>
+                  </div>
+                </div>
 
-          <div className="flex items-center gap-1.5 mt-3">
-            <span className="px-2 py-0.5 rounded bg-[#1B1B22] border border-[#24242B] text-[10px] font-mono text-[#CCFF00]">
-              #ELECTRONIC
-            </span>
-            <span className="px-2 py-0.5 rounded bg-[#1B1B22] border border-[#24242B] text-[10px] font-mono text-[#8E8E9F]">
-              #LATE-NIGHT LO-FI
-            </span>
-            <span className="text-[10px] font-mono text-[#8E8E9F] ml-auto">
-              94% VIBE SYNC
-            </span>
-          </div>
+                <div className="flex items-center gap-1.5 self-start sm:self-center">
+                  <a
+                    href={`https://open.spotify.com/search/${encodeURIComponent(currentUser.currentRotation)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1.5 rounded-lg bg-[#1DB954]/15 hover:bg-[#1DB954]/25 border border-[#1DB954]/40 text-[#1DB954] text-[11px] font-mono font-bold flex items-center gap-1 transition-colors"
+                  >
+                    <span>Listen</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playRadarBlip();
+                      setSpotifyModalOpen(true);
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg bg-[#1B1B22] hover:bg-[#24242B] border border-[#24242B] text-[11px] font-mono text-[#F4F4F6] transition-colors"
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playRadarBlip();
+                      disconnectSpotify();
+                    }}
+                    className="px-2 py-1.5 rounded-lg bg-[#FF007A]/10 hover:bg-[#FF007A]/20 border border-[#FF007A]/30 text-[11px] font-mono text-[#FF007A] transition-colors"
+                    title="Remove Spotify rotation"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Music className="w-4 h-4 text-[#1DB954]" />
+                  <span className="text-xs font-mono font-bold text-[#F4F4F6] tracking-wider uppercase">
+                    SPOTIFY AUDIO AURA
+                  </span>
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#1DB954]/10 text-[#1DB954] border border-[#1DB954]/30 font-bold">
+                    OPTIONAL
+                  </span>
+                </div>
+                <p className="text-xs font-mono text-[#8E8E9F] leading-relaxed max-w-sm">
+                  Broadcast your current song rotation or favorite artist to match musical chemistry at IRL meetups.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playRadarBlip();
+                  setSpotifyModalOpen(true);
+                }}
+                className="py-2.5 px-4 rounded-xl bg-[#1DB954] hover:bg-[#1aa34a] text-[#0A0A0C] font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(29,185,84,0.3)] transition-all shrink-0 hover:scale-[1.02]"
+              >
+                <Music className="w-3.5 h-3.5" />
+                <span>+ Connect Spotify Aura</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bento 2 (Medium Left - Street Cred Lore) */}
@@ -334,24 +401,66 @@ export default function BentoProfile() {
           </p>
         </div>
 
-        {/* Bento 3 (Medium Right - Recent Scrapbook Polaroid) */}
-        <div className="p-4 rounded-2xl bg-[#141418] border border-[#24242B] flex flex-col justify-between">
-          <div>
-            <span className="text-xs font-mono font-bold text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#00F0FF]" /> MEMORY SCRAPBOOK
-            </span>
-            <div className="p-2.5 rounded-xl bg-[#0A0A0C] border border-[#24242B] rotate-1 shadow-md">
-              <img 
-                src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=300&auto=format&fit=crop&q=80" 
-                alt="Memory" 
-                className="w-full h-24 object-cover rounded-lg"
-              />
-              <div className="pt-2 text-center">
-                <span className="text-[10px] font-mono font-bold text-[#F4F4F6] block">Midnight Chai @ Gate 2</span>
-                <span className="text-[9px] font-mono text-[#8E8E9F]">Verified Squad • 4 Members</span>
-              </div>
-            </div>
-          </div>
+        {/* Bento 3 (Medium Right - Interactive Scrapbook Polaroid) */}
+        <div 
+          onClick={() => {
+            playRadarBlip();
+            setScrapbookModalOpen(true);
+          }}
+          className="p-4 rounded-2xl bg-[#141418] border border-[#24242B] hover:border-[#00F0FF] cursor-pointer transition-all flex flex-col justify-between group hover:scale-[1.01]"
+        >
+          {(() => {
+            const memoryList = (currentUser.scrapbookMemories && currentUser.scrapbookMemories.length > 0)
+              ? currentUser.scrapbookMemories
+              : DEFAULT_SCRAPBOOK_MEMORIES;
+            const latestMemory = memoryList[0];
+
+            return (
+              <>
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="text-xs font-mono font-bold text-[#8E8E9F] group-hover:text-[#00F0FF] uppercase tracking-wider flex items-center gap-1.5 transition-colors">
+                      <Sparkles className="w-3.5 h-3.5 text-[#00F0FF]" /> MEMORY SCRAPBOOK
+                    </span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 font-bold">
+                      {memoryList.length} POLAROIDS
+                    </span>
+                  </div>
+
+                  {/* Polaroid Frame */}
+                  <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-[#24242B] rotate-1 shadow-xl group-hover:rotate-0 transition-transform text-[#0A0A0C]">
+                    <div className="relative rounded-lg overflow-hidden bg-[#0A0A0C] h-28">
+                      <img 
+                        src={latestMemory.photoUrl} 
+                        alt={latestMemory.title} 
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute bottom-1.5 left-1.5 bg-black/75 px-1.5 py-0.5 rounded text-[8px] font-mono text-[#00F0FF]">
+                        {latestMemory.vibeTag}
+                      </span>
+                    </div>
+                    <div className="pt-2 text-center font-mono">
+                      <span className="text-[11px] font-bold text-[#0A0A0C] block truncate">
+                        {latestMemory.title}
+                      </span>
+                      <span className="text-[9px] text-[#606070] truncate block">
+                        {latestMemory.locationName} • {latestMemory.cityName}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 flex items-center justify-between text-[10px] font-mono border-t border-[#24242B] mt-2">
+                  <span className="text-[#00F0FF] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    <span>View Album</span> &rarr;
+                  </span>
+                  <span className="text-[#8E8E9F]">
+                    Tap to Flip & Sign
+                  </span>
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* Bento 4 (Wide Bottom - Hyperfixations & Lore) */}

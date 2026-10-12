@@ -24,6 +24,23 @@ export interface UserLocation {
   isLiveGps?: boolean;
 }
 
+export interface ScrapbookMemory {
+  id: string;
+  title: string;
+  photoUrl: string;
+  locationName: string;
+  cityName: string;
+  date: string;
+  squadMembers: {
+    handle: string;
+    avatarUrl: string;
+  }[];
+  caption: string;
+  vibeTag: string;
+  likes: number;
+  notes?: string;
+}
+
 export interface UserProfile {
   id: string;
   handle: string;
@@ -35,6 +52,7 @@ export interface UserProfile {
   flakeRate: number; // percentage (e.g. 0% = perfect)
   isVerified: boolean;
   gender?: 'M' | 'F' | 'OTHER';
+  isSpotifyConnected?: boolean;
   spotifyTopArtists?: string[];
   currentRotation?: string;
   audioAura?: string;
@@ -44,6 +62,7 @@ export interface UserProfile {
   vibeTags?: string[];
   liveStatus?: string;
   socialLink?: string;
+  scrapbookMemories?: ScrapbookMemory[];
 }
 
 export interface DropMember {

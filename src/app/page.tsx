@@ -12,6 +12,8 @@ import ShareModal from '@/components/drops/ShareModal';
 import AuthModal from '@/components/auth/AuthModal';
 import MemberProfileModal from '@/components/profile/MemberProfileModal';
 import LocationPickerModal from '@/components/map/LocationPickerModal';
+import SpotifyConnectModal from '@/components/profile/SpotifyConnectModal';
+import ScrapbookModal from '@/components/profile/ScrapbookModal';
 import { 
   Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX, Navigation, MapPin 
 } from 'lucide-react';
@@ -308,6 +310,8 @@ export default function Home() {
       <AuthModal />
       <MemberProfileModal />
       <LocationPickerModal />
+      <SpotifyConnectModal />
+      <ScrapbookModal />
     </main>
   );
 }

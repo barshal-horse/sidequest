@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Drop, MetroCity, DropCategory, UserProfile, UserLocation, ChatMessage } from '@/types';
-import { METRO_CITIES, INITIAL_DROPS, INITIAL_DROP_CHATS, DEMO_PROFILES, generateRandomPersona } from './constants';
+import { Drop, MetroCity, DropCategory, UserProfile, UserLocation, ChatMessage, ScrapbookMemory } from '@/types';
+import { METRO_CITIES, INITIAL_DROPS, INITIAL_DROP_CHATS, DEMO_PROFILES, generateRandomPersona, DEFAULT_SCRAPBOOK_MEMORIES } from './constants';
 import { toggleMuteSound } from './audio';
 
 const DEFAULT_NEW_EXPLORER: UserProfile = {
@@ -15,14 +15,16 @@ const DEFAULT_NEW_EXPLORER: UserProfile = {
   flakeRate: 0,
   isVerified: true,
   gender: 'OTHER',
-  spotifyTopArtists: ['Fred again..', 'The Local Train'],
-  currentRotation: 'Fred again.. - adore u',
-  audioAura: 'Indie / Electronic Chill',
+  isSpotifyConnected: false,
+  spotifyTopArtists: [],
+  currentRotation: undefined,
+  audioAura: undefined,
   badges: ['⚡ New Explorer', '🔥 100% Show-Up'],
   bioManifesto: 'Spontaneous sidequest explorer. Tap "Edit Profile" to claim your unique identity!',
   isProfileCustomized: false,
   vibeTags: ['🧋 3am Chai Runs', '🎧 UK Garage', '🎾 Turf Badminton', '📸 Film Camera', '🍵 Iced Matcha'],
-  liveStatus: 'Down for Chai right now 🧋'
+  liveStatus: 'Down for Chai right now 🧋',
+  scrapbookMemories: DEFAULT_SCRAPBOOK_MEMORIES
 };
 
 interface SideQuestStore {
@@ -39,6 +41,8 @@ interface SideQuestStore {
   isAuthModalOpen: boolean;
   authModalReason: string | null;
   isLocationModalOpen: boolean;
+  isScrapbookModalOpen: boolean;
+  isSpotifyModalOpen: boolean;
   activeDropId: string | null;
   isCreateSheetOpen: boolean;
   isShareModalOpen: boolean;
@@ -54,6 +58,12 @@ interface SideQuestStore {
   sendDropMessage: (dropId: string, text: string) => void;
   setUserLocation: (loc: UserLocation | null) => void;
   setLocationModalOpen: (open: boolean) => void;
+  setScrapbookModalOpen: (open: boolean) => void;
+  setSpotifyModalOpen: (open: boolean) => void;
+  connectSpotify: (trackAndArtist: string, audioAura?: string) => void;
+  disconnectSpotify: () => void;
+  addScrapbookMemory: (memory: Omit<ScrapbookMemory, 'id' | 'likes'>) => void;
+  likeScrapbookMemory: (memoryId: string) => void;
   setLocationCoords: (lat: number, lng: number, addressName?: string, isLiveGps?: boolean) => void;
   setInspectedMember: (member: UserProfile | null) => void;
   toggleSound: () => boolean;
@@ -93,6 +103,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
       isAuthModalOpen: false,
       authModalReason: null,
       isLocationModalOpen: false,
+      isScrapbookModalOpen: false,
+      isSpotifyModalOpen: false,
       activeDropId: null,
       isCreateSheetOpen: false,
       isShareModalOpen: false,
@@ -114,7 +126,95 @@ export const useSideQuestStore = create<SideQuestStore>()(
 
       setUserLocation: (loc) => set({ userLocation: loc }),
 
-      setLocationModalOpen: (open) => set({ isLocationModalOpen: open }),
+      setLocationModalOpen: (open: boolean) => set({ isLocationModalOpen: open }),
+
+      setScrapbookModalOpen: (open: boolean) => set({ isScrapbookModalOpen: open }),
+
+      setSpotifyModalOpen: (open: boolean) => set({ isSpotifyModalOpen: open }),
+
+      connectSpotify: (trackAndArtist: string, audioAura?: string) => {
+        const artist = trackAndArtist.includes(' - ') ? trackAndArtist.split(' - ')[0].trim() : trackAndArtist.trim();
+        const aura = audioAura || 'Late-Night Lo-Fi / Electronic';
+        set(state => {
+          const updatedUser: UserProfile = {
+            ...state.currentUser,
+            isSpotifyConnected: true,
+            currentRotation: trackAndArtist.trim(),
+            audioAura: aura,
+            spotifyTopArtists: [artist, ...(state.currentUser.spotifyTopArtists || [])].slice(0, 4)
+          };
+          const updatedProfiles = state.registeredProfiles.map(p => 
+            (p.id === updatedUser.id || p.handle === updatedUser.handle) ? updatedUser : p
+          );
+          return {
+            currentUser: updatedUser,
+            registeredProfiles: updatedProfiles,
+            isSpotifyModalOpen: false
+          };
+        });
+      },
+
+      disconnectSpotify: () => {
+        set(state => {
+          const updatedUser: UserProfile = {
+            ...state.currentUser,
+            isSpotifyConnected: false,
+            currentRotation: undefined,
+            audioAura: undefined,
+            spotifyTopArtists: []
+          };
+          const updatedProfiles = state.registeredProfiles.map(p => 
+            (p.id === updatedUser.id || p.handle === updatedUser.handle) ? updatedUser : p
+          );
+          return {
+            currentUser: updatedUser,
+            registeredProfiles: updatedProfiles,
+            isSpotifyModalOpen: false
+          };
+        });
+      },
+
+      addScrapbookMemory: (memoryData) => {
+        const newMemory: ScrapbookMemory = {
+          ...memoryData,
+          id: `mem-${Date.now()}`,
+          likes: 1
+        };
+        set(state => {
+          const currentMemories = state.currentUser.scrapbookMemories || DEFAULT_SCRAPBOOK_MEMORIES;
+          const updatedUser: UserProfile = {
+            ...state.currentUser,
+            scrapbookMemories: [newMemory, ...currentMemories]
+          };
+          const updatedProfiles = state.registeredProfiles.map(p => 
+            (p.id === updatedUser.id || p.handle === updatedUser.handle) ? updatedUser : p
+          );
+          return {
+            currentUser: updatedUser,
+            registeredProfiles: updatedProfiles
+          };
+        });
+      },
+
+      likeScrapbookMemory: (memoryId: string) => {
+        set(state => {
+          const currentMemories = state.currentUser.scrapbookMemories || DEFAULT_SCRAPBOOK_MEMORIES;
+          const updatedMemories = currentMemories.map(m => 
+            m.id === memoryId ? { ...m, likes: m.likes + 1 } : m
+          );
+          const updatedUser: UserProfile = {
+            ...state.currentUser,
+            scrapbookMemories: updatedMemories
+          };
+          const updatedProfiles = state.registeredProfiles.map(p => 
+            (p.id === updatedUser.id || p.handle === updatedUser.handle) ? updatedUser : p
+          );
+          return {
+            currentUser: updatedUser,
+            registeredProfiles: updatedProfiles
+          };
+        });
+      },
 
       setLocationCoords: (lat, lng, addressName, isLiveGps = false) => {
         set({

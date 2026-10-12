@@ -6,7 +6,9 @@ import {
   DEMO_PROFILES,
   GEN_Z_VIBE_TAGS,
   LIVE_STATUS_OPTIONS,
-  generateRandomPersona
+  generateRandomPersona,
+  DEFAULT_SCRAPBOOK_MEMORIES,
+  POPULAR_SPOTIFY_ROTATIONS
 } from '../src/lib/constants.js';
 import { 
   calculateDistanceInMeters, 
@@ -420,6 +422,90 @@ runTest('Flare creation payload integrity & auto-expiry math', () => {
   assert.strictEqual(dropPayload.currentSlots, 1);
   assert.strictEqual(dropPayload.maxSlots, 4);
   assert.ok(new Date(dropPayload.expiresAt).getTime() > now, 'expiresAt must be in future');
+});
+
+// ============================================================================
+// SECTION 7: OPTIONAL SPOTIFY INTEGRATION & IRL MEMORY SCRAPBOOK
+// ============================================================================
+console.log('\n🎵 SECTION 7: Optional Spotify Integration & IRL Memory Scrapbook');
+
+runTest('Spotify integration is optional: profiles can exist with or without connected music', () => {
+  const profileWithoutSpotify = {
+    id: 'user-acoustic',
+    handle: 'acoustic.explorer',
+    fullName: 'Acoustic Explorer',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    city: 'Bengaluru',
+    karmaScore: 100,
+    questsCompleted: 3,
+    flakeRate: 0,
+    isVerified: true,
+    isSpotifyConnected: false,
+    currentRotation: undefined,
+    audioAura: undefined
+  };
+
+  assert.strictEqual(profileWithoutSpotify.isSpotifyConnected, false);
+  assert.strictEqual(profileWithoutSpotify.currentRotation, undefined);
+
+  // Connecting spotify rotation updates fields cleanly
+  const connectedProfile = {
+    ...profileWithoutSpotify,
+    isSpotifyConnected: true,
+    currentRotation: 'Fred again.. - adore u',
+    audioAura: 'Late-Night Lo-Fi / Electronic'
+  };
+
+  assert.strictEqual(connectedProfile.isSpotifyConnected, true);
+  assert.strictEqual(connectedProfile.currentRotation, 'Fred again.. - adore u');
+});
+
+runTest('POPULAR_SPOTIFY_ROTATIONS provides rich Gen Z presets with genre tags', () => {
+  assert.ok(POPULAR_SPOTIFY_ROTATIONS.length >= 6);
+  POPULAR_SPOTIFY_ROTATIONS.forEach(preset => {
+    assert.ok(preset.track.includes(' - '));
+    assert.ok(preset.aura.length > 0);
+    assert.ok(preset.genre.startsWith('#'));
+  });
+});
+
+runTest('DEFAULT_SCRAPBOOK_MEMORIES has valid polaroid memories with attendees & captions', () => {
+  assert.ok(DEFAULT_SCRAPBOOK_MEMORIES.length >= 3);
+  DEFAULT_SCRAPBOOK_MEMORIES.forEach(mem => {
+    assert.ok(mem.id.startsWith('mem-'));
+    assert.ok(mem.title.length > 0);
+    assert.ok(mem.photoUrl.startsWith('https://'));
+    assert.ok(mem.squadMembers.length > 0);
+    assert.ok(mem.likes > 0);
+    assert.ok(mem.caption.length > 0);
+  });
+});
+
+runTest('Scrapbook addition & interactive like mechanics work correctly', () => {
+  let memoryList = [...DEFAULT_SCRAPBOOK_MEMORIES];
+  const initialCount = memoryList.length;
+
+  const newMemory = {
+    id: `mem-${Date.now()}`,
+    title: 'Indie Coffee Crawl in HKV',
+    photoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600',
+    locationName: 'Blue Tokai, Hauz Khas',
+    cityName: 'Delhi-NCR',
+    date: 'Just now • Verified Meetup',
+    squadMembers: [{ handle: 'arjun.del', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' }],
+    caption: 'Great pour-over session with fellow builders.',
+    vibeTag: '☕ Filter Coffee Crawls',
+    likes: 1,
+    notes: 'Signed: "Next round in Connaught Place!"'
+  };
+
+  memoryList = [newMemory, ...memoryList];
+  assert.strictEqual(memoryList.length, initialCount + 1);
+  assert.strictEqual(memoryList[0].id, newMemory.id);
+
+  // Like interaction
+  memoryList = memoryList.map(m => m.id === newMemory.id ? { ...m, likes: m.likes + 1 } : m);
+  assert.strictEqual(memoryList[0].likes, 2);
 });
 
 // ============================================================================

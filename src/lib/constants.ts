@@ -1,4 +1,4 @@
-import { MetroCity, Drop, UserProfile, ChatMessage } from '@/types';
+import { MetroCity, Drop, UserProfile, ChatMessage, ScrapbookMemory } from '@/types';
 
 
 export const METRO_CITIES: MetroCity[] = [
@@ -700,6 +700,69 @@ export const LIVE_STATUS_OPTIONS = [
   'Roaming & Sidequesting ⚡'
 ];
 
+export const POPULAR_SPOTIFY_ROTATIONS = [
+  { track: 'Fred again.. - adore u', aura: 'Late-Night Lo-Fi / Electronic', genre: '#ELECTRONIC' },
+  { track: 'Seedhe Maut - Nanchaku', aura: 'High-BPM Cardio / Desi Hip-Hop', genre: '#DHH' },
+  { track: 'Charli xcx - 360', aura: 'Hyperpop / Brat Energy', genre: '#HYPERPOP' },
+  { track: 'Peggy Gou - (It Goes Like) Nanana', aura: 'Summer Club / House', genre: '#HOUSE' },
+  { track: 'The Local Train - Choo Lo', aura: 'Indie Rock / Coastal Breeze', genre: '#INDIEROCK' },
+  { track: 'Cigarettes After Sex - Apocalypse', aura: 'Dream Pop / Ambient Sunset', genre: '#DREAMPOP' },
+  { track: 'AP Dhillon - With You', aura: 'Punjabi Wave / Chill', genre: '#CHILL' },
+  { track: 'Overmono - Good Lies', aura: 'High-Tempo UK Garage / Coffee', genre: '#UKGARAGE' }
+];
+
+export const DEFAULT_SCRAPBOOK_MEMORIES: ScrapbookMemory[] = [
+  {
+    id: 'mem-1',
+    title: 'Midnight Chai @ Gate 2',
+    photoUrl: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600&auto=format&fit=crop&q=80',
+    locationName: 'Sanjay Tea Stall, Koramangala 5th',
+    cityName: 'Bengaluru',
+    date: 'Last Friday • 01:15 AM',
+    squadMembers: [
+      { handle: 'harshal.b', avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150' },
+      { handle: 'sneha.ui', avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
+      { handle: 'aarav.dev', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' }
+    ],
+    caption: '4 hot ginger chais, discussing startup ideas under streetlights until 2am. Zero flakers!',
+    vibeTag: '🧋 3am Chai Runs',
+    likes: 18,
+    notes: 'Signed: "Next time filter coffee on me!" - Harshal • "Great pitch deck session" - Sneha'
+  },
+  {
+    id: 'mem-2',
+    title: 'Turf Badminton 2v2 Smash',
+    photoUrl: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=600&auto=format&fit=crop&q=80',
+    locationName: 'Play Arena, Koramangala',
+    cityName: 'Bengaluru',
+    date: '3 days ago • 07:30 PM',
+    squadMembers: [
+      { handle: 'kavya.badm', avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150' },
+      { handle: 'vikram.k', avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' }
+    ],
+    caption: 'Intense 3-set rally. Court 3 champions. Winner bought fresh sugarcane juice after!',
+    vibeTag: '🎾 Turf Badminton 2v2',
+    likes: 24,
+    notes: 'Signed: "Match of the season. 21-19 final set!" - Vikram'
+  },
+  {
+    id: 'mem-3',
+    title: 'Carter Road Golden Hour Walk',
+    photoUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80',
+    locationName: 'Carter Road Promenade, Bandra',
+    cityName: 'Mumbai',
+    date: 'Last Sunday • 06:10 PM',
+    squadMembers: [
+      { handle: 'zoya.carter', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
+      { handle: 'rohan.ai', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' }
+    ],
+    caption: 'Shot 2 rolls of 35mm film by the Arabian Sea while listening to Peggy Gou on shared AirPods.',
+    vibeTag: '📸 35mm Film Photography',
+    likes: 31,
+    notes: 'Signed: "Film rolls turned out cinematic" - Zoya'
+  }
+];
+
 export const DEMO_PROFILES: UserProfile[] = [
   {
     id: 'user-harshal',
@@ -934,13 +997,15 @@ export function generateRandomPersona(city: string = 'Bengaluru'): UserProfile {
     flakeRate: 0,
     isVerified: true,
     gender: 'M',
+    isSpotifyConnected: true,
     spotifyTopArtists: [rotation.split(' - ')[0], 'Fred again..', 'The Local Train'],
     currentRotation: rotation,
     audioAura: aura,
     badges: ['⚡ New Explorer', '🔥 100% Show-Up'],
     bioManifesto: 'Spontaneous sidequest explorer. Down for 3am tea stalls, sunset walks, or music jams.',
     vibeTags: selectedVibeTags,
-    liveStatus
+    liveStatus,
+    scrapbookMemories: DEFAULT_SCRAPBOOK_MEMORIES
   };
 }
 

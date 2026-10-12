@@ -61,7 +61,7 @@ export default function AuthModal() {
       setGender(currentUser.gender || 'M');
       setSelectedAvatar(currentUser.avatarUrl || AVATAR_OPTIONS[0]);
       setBio(currentUser.bioManifesto || 'Late night chai runs and building cool things.');
-      setCurrentSong(currentUser.currentRotation || 'Fred again.. - adore u');
+      setCurrentSong(currentUser.isSpotifyConnected ? (currentUser.currentRotation || '') : '');
       setVibeTags(
         currentUser.vibeTags && currentUser.vibeTags.length > 0 
           ? currentUser.vibeTags 
@@ -108,7 +108,8 @@ export default function AuthModal() {
         avatarUrl: selectedAvatar,
         gender,
         bioManifesto: bio,
-        currentRotation: currentSong,
+        isSpotifyConnected: Boolean(currentSong && currentSong.trim()),
+        currentRotation: currentSong.trim() || undefined,
         vibeTags,
         liveStatus,
         city: selectedCity.name,
@@ -117,8 +118,8 @@ export default function AuthModal() {
         flakeRate: 0,
         isVerified: true,
         badges: ['⚡ New Explorer', '🔥 100% Show-Up'],
-        spotifyTopArtists: [currentSong.split(' - ')[0] || 'Fred again..'],
-        audioAura: 'Custom Taste Graph'
+        spotifyTopArtists: currentSong.trim() ? [currentSong.split(' - ')[0] || 'Fred again..'] : [],
+        audioAura: currentSong.trim() ? 'Custom Taste Graph' : undefined
       };
       loginUser(newIndividual);
       playCheckInChime();
@@ -129,7 +130,10 @@ export default function AuthModal() {
         avatarUrl: selectedAvatar,
         gender,
         bioManifesto: bio,
-        currentRotation: currentSong,
+        isSpotifyConnected: Boolean(currentSong && currentSong.trim()),
+        currentRotation: currentSong.trim() || undefined,
+        spotifyTopArtists: currentSong.trim() ? [currentSong.split(' - ')[0] || 'Fred again..'] : [],
+        audioAura: currentSong.trim() ? (currentUser.audioAura || 'Custom Taste Graph') : undefined,
         vibeTags,
         liveStatus,
         city: selectedCity.name
@@ -282,18 +286,34 @@ export default function AuthModal() {
             </div>
           </div>
 
-          {/* Current Music Rotation */}
+          {/* Current Music Rotation (100% Optional) */}
           <div>
-            <label className="block text-[11px] font-mono text-[#8E8E9F] mb-1 flex items-center gap-1">
-              <Music className="w-3 h-3 text-[#1DB954]" /> CURRENT ROTATION (SPOTIFY SONG)
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Fred again.. - adore u"
-              value={currentSong}
-              onChange={e => setCurrentSong(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-[#141418] border border-[#24242B] focus:border-[#CCFF00] text-xs text-[#F4F4F6] font-mono outline-none"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-mono text-[#8E8E9F] flex items-center gap-1">
+                <Music className="w-3 h-3 text-[#1DB954]" /> SPOTIFY ROTATION
+              </label>
+              <span className="text-[10px] font-mono text-[#1DB954] bg-[#1DB954]/10 px-1.5 py-0.2 rounded border border-[#1DB954]/30">
+                OPTIONAL
+              </span>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Leave blank or e.g. Fred again.. - adore u"
+                value={currentSong}
+                onChange={e => setCurrentSong(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-[#141418] border border-[#24242B] focus:border-[#1DB954] text-xs text-[#F4F4F6] font-mono outline-none pr-16"
+              />
+              {currentSong && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentSong('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-[#8E8E9F] hover:text-[#FF007A] px-1.5 py-0.5 rounded bg-[#1B1B22]"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Bio / IRL Manifesto */}
