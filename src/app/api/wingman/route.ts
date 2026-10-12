@@ -52,6 +52,18 @@ Include local cultural humor, zero awkwardness, and suggest 2 funny debate topic
       ],
       pune: [
         `FC Road & Koregaon Park aesthetic: Calm lofi vibes mixed with rapid startup discussions. Starter: Best misal spot in town vs best cold coffee stall.`
+      ],
+      hyderabad: [
+        `Jubilee Hills & HITEC City frequency synced: 96% agreement on specialty cold brew and system architectures. Starter: Debate which late-night biryani spot actually holds the crown.`,
+        `Tech corridor decompression: Zero corporate jargon allowed. Starter: Ask about their latest hardware tinkering or side hustle.`
+      ],
+      chennai: [
+        `Bessie Beach morning vibe active: 100% resonance on brass degree filter coffee and coastal morning breeze. Starter: Best idli stall in South Chennai vs late-night dosas.`,
+        `Creative hub frequency: Acoustic tunes and weekend design banter protocol engaged.`
+      ],
+      kolkata: [
+        `Park Street & Flurys heritage frequency aligned: Vintage tea rooms, art critiques & indie book discussions. Starter: Favorite secondhand book stall on College Street.`,
+        `Evening adda protocol active: Deep conversations, zero awkwardness, pure high-entropy vibes.`
       ]
     };
 

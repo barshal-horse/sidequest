@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { DropCategory } from '@/types';
 import { X, Zap, Clock, Users, Shield, MapPin, Sparkles } from 'lucide-react';
@@ -23,6 +23,12 @@ export default function CreateDropSheet() {
   const [maxSlots, setMaxSlots] = useState(4);
   const [durationMins, setDurationMins] = useState(90);
   const [isGirlsOnly, setIsGirlsOnly] = useState(false);
+
+  useEffect(() => {
+    if (selectedCity.hotspots.length > 0 && !selectedCity.hotspots.some(h => h.id === hotspotId)) {
+      setHotspotId(selectedCity.hotspots[0].id);
+    }
+  }, [selectedCity, hotspotId]);
 
   if (!isCreateSheetOpen) return null;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
   X, MapPin, Clock, Users, Sparkles, Send, Share2, 
@@ -28,14 +28,13 @@ export default function DropModal() {
     selectedCity,
     setInspectedMember,
     userLocation,
-    setLocationCoords
+    setLocationCoords,
+    dropChats,
+    sendDropMessage
   } = useSideQuestStore();
 
   const [messageText, setMessageText] = useState('');
-  const [messages, setMessages] = useState<Array<{ sender: string; text: string; time: string; isHost?: boolean }>>([
-    { sender: 'Aarav (Host)', text: 'reached venue, stall is open and tea is brewing!!', time: 'Just now', isHost: true },
-    { sender: 'Sneha', text: 'coming down in 2 mins, get me a cutting chai 🧋', time: '1m ago' }
-  ]);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const [isVerifyingGps, setIsVerifyingGps] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
@@ -44,6 +43,31 @@ export default function DropModal() {
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
   const drop = drops.find(d => d.id === activeDropId);
+  const currentChat = (drop && dropChats ? dropChats[drop.id] : []) || [];
+
+  // Auto-scroll chat to latest message
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [currentChat.length, activeDropId]);
+
+  // Dynamic contextual quick chips based on activity
+  const quickChips = useMemo(() => {
+    if (!drop) return ['🏃 On my way', '⏳ 5 mins away', '📍 Just arrived', '⚡ Ready'];
+    switch (drop.category) {
+      case 'CHAI_FOOD':
+        return ['🏃 On my way', '🧋 Order cutting chai for me', '⏳ 5 mins away', '📍 Reached stall'];
+      case 'SPORTS':
+        return ['🏸 Got racquets ready', '🏃 On court now', '⏳ Tying laces, 3 mins', '💧 Extra water brought'];
+      case 'COWORK_DEV':
+        return ['💻 Sockets near table?', '☕ Ordering cold brew', '🚀 Ready to ship', '⏳ 5 mins away'];
+      case 'GIGS_CULTURE':
+        return ['🎟️ At entrance gate', '🎸 Stage side seats', '⏳ Parking now', '🔥 Ready for the set'];
+      default:
+        return ['🏃 On my way', '⏳ 5 mins away', '📍 Just arrived', '⚡ Ready'];
+    }
+  }, [drop?.category]);
 
   // Time remaining calculation
   const [timeLeft, setTimeLeft] = useState('00:00');
@@ -74,30 +98,14 @@ export default function DropModal() {
 
   const handleSendMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!messageText.trim()) return;
-
-    setMessages(prev => [
-      ...prev,
-      {
-        sender: currentUser.fullName.split(' ')[0],
-        text: messageText,
-        time: 'Just now',
-        isHost
-      }
-    ]);
+    if (!messageText.trim() || !drop) return;
+    sendDropMessage(drop.id, messageText);
     setMessageText('');
   };
 
   const handleQuickChip = (text: string) => {
-    setMessages(prev => [
-      ...prev,
-      {
-        sender: currentUser.fullName.split(' ')[0],
-        text,
-        time: 'Just now',
-        isHost
-      }
-    ]);
+    if (!drop) return;
+    sendDropMessage(drop.id, text);
   };
 
   // Real GPS Geofence Check-In
@@ -373,51 +381,98 @@ export default function DropModal() {
           {/* Real-time Ephemeral Chat */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between text-xs font-mono text-[#8E8E9F]">
-              <span>💬 LOBBY CHAT (Self-destructs post-quest)</span>
-              <span className="text-[10px] text-[#CCFF00]">🟢 LIVE</span>
+              <span className="flex items-center gap-1.5 font-bold">
+                <span>💬 LOBBY CHAT</span>
+                <span className="text-[10px] text-[#00F0FF] bg-[#00F0FF]/10 px-1.5 py-0.2 rounded border border-[#00F0FF]/30">
+                  DROP #{drop.id.toUpperCase()}
+                </span>
+              </span>
+              <span className="text-[10px] font-mono text-[#CCFF00] flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-ping" /> LIVE
+              </span>
             </div>
 
-            <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
-              {messages.map((m, idx) => (
-                <div key={idx} className="p-2.5 rounded-lg bg-[#141418] border border-[#24242B] text-xs">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono font-bold text-[#CCFF00]">
-                      {m.sender} {m.isHost && '👑'}
-                    </span>
-                    <span className="text-[10px] font-mono text-[#8E8E9F]">{m.time}</span>
-                  </div>
-                  <p className="text-[#F4F4F6]">{m.text}</p>
+            {/* Chat Messages Container with Auto-Scroll */}
+            <div 
+              ref={chatScrollRef} 
+              className="space-y-2 max-h-44 overflow-y-auto pr-1 select-text scroll-smooth"
+            >
+              {currentChat.length === 0 ? (
+                <div className="p-3 text-center rounded-xl bg-[#141418] border border-[#24242B] text-xs font-mono text-[#8E8E9F]">
+                  💬 Flare active. Say hi or drop an ETA for the squad!
                 </div>
-              ))}
+              ) : (
+                currentChat.map((m) => {
+                  if (m.isSystem) {
+                    return (
+                      <div 
+                        key={m.id} 
+                        className="py-1 px-2.5 rounded-lg bg-[#00F0FF]/10 border border-[#00F0FF]/30 text-[11px] font-mono text-[#00F0FF] flex items-center justify-between"
+                      >
+                        <span className="truncate">{m.text}</span>
+                        <span className="text-[9px] text-[#8E8E9F] ml-2 shrink-0">{m.timestamp}</span>
+                      </div>
+                    );
+                  }
+
+                  const isMe = m.userId === currentUser.id;
+                  const isHostMsg = m.isHost || m.userId === drop.host.id;
+
+                  return (
+                    <div 
+                      key={m.id} 
+                      className={`p-2.5 rounded-xl border text-xs transition-all ${
+                        isMe 
+                          ? 'bg-[#181820] border-[#CCFF00]/40 ml-4 shadow-sm' 
+                          : 'bg-[#141418] border-[#24242B] mr-4'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1 gap-2">
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          {m.avatarUrl ? (
+                            <img 
+                              src={m.avatarUrl} 
+                              alt={m.handle} 
+                              className="w-4 h-4 rounded-full object-cover shrink-0 border border-[#24242B]" 
+                            />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full bg-[#24242B] text-[8px] flex items-center justify-center text-white shrink-0">
+                              {m.fullName.charAt(0)}
+                            </div>
+                          )}
+                          <span className={`font-mono font-bold truncate text-[11px] ${
+                            isMe ? 'text-[#CCFF00]' : isHostMsg ? 'text-[#00F0FF]' : 'text-[#F4F4F6]'
+                          }`}>
+                            {m.fullName.split(' ')[0]} {isHostMsg && '👑'} {isMe && '(You)'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono text-[#8E8E9F] shrink-0">{m.timestamp}</span>
+                      </div>
+                      <p className="text-[#F4F4F6] text-xs font-mono break-words pl-5">{m.text}</p>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
-            {/* Quick Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              <button 
-                onClick={() => handleQuickChip('🏃 On my way now')}
-                className="px-2.5 py-1 rounded-full bg-[#1B1B22] border border-[#24242B] hover:border-[#CCFF00] text-[11px] font-mono text-[#8E8E9F] hover:text-[#F4F4F6] whitespace-nowrap"
-              >
-                🏃 On my way
-              </button>
-              <button 
-                onClick={() => handleQuickChip('🧋 Order cutting chai for me')}
-                className="px-2.5 py-1 rounded-full bg-[#1B1B22] border border-[#24242B] hover:border-[#CCFF00] text-[11px] font-mono text-[#8E8E9F] hover:text-[#F4F4F6] whitespace-nowrap"
-              >
-                🧋 Order cutting for me
-              </button>
-              <button 
-                onClick={() => handleQuickChip('⏳ 5 mins away')}
-                className="px-2.5 py-1 rounded-full bg-[#1B1B22] border border-[#24242B] hover:border-[#CCFF00] text-[11px] font-mono text-[#8E8E9F] hover:text-[#F4F4F6] whitespace-nowrap"
-              >
-                ⏳ 5 mins away
-              </button>
+            {/* Dynamic Activity-Specific Quick Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              {quickChips.map((chip, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => handleQuickChip(chip)}
+                  className="px-2.5 py-1 rounded-full bg-[#1B1B22] border border-[#24242B] hover:border-[#CCFF00] text-[11px] font-mono text-[#8E8E9F] hover:text-[#CCFF00] whitespace-nowrap transition-colors"
+                >
+                  {chip}
+                </button>
+              ))}
             </div>
 
             {/* Message Input */}
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Type a message to squad..."
+                placeholder={`Message @${drop.host.handle.split('.')[0]}'s squad...`}
                 value={messageText}
                 onChange={e => setMessageText(e.target.value)}
                 className="flex-1 px-3 py-2 rounded-lg bg-[#141418] border border-[#24242B] focus:border-[#CCFF00] text-xs text-[#F4F4F6] outline-none font-mono"
@@ -425,6 +480,7 @@ export default function DropModal() {
               <button
                 type="submit"
                 className="px-3 py-2 rounded-lg bg-[#CCFF00] text-[#0A0A0C] hover:bg-[#b8e600] transition-colors"
+                title="Send message to squad"
               >
                 <Send className="w-3.5 h-3.5" />
               </button>

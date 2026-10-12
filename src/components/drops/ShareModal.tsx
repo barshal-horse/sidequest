@@ -43,14 +43,39 @@ Claim a slot here: ${shareUrl}`;
 
   const shareText = `⚡ ${drop.host.fullName.split(' ')[0]} dropped a Flare: "${drop.title}" at ${drop.venueName}! ${drop.maxSlots - drop.currentSlots} slots open before timer expires. Join the squad: ${shareUrl}`;
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareText);
+  const copyTextToClipboard = async (text: string) => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {
+      // Fall through to fallback
+    }
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const handleCopyLink = async () => {
+    await copyTextToClipboard(shareText);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const handleCopyReddit = () => {
-    navigator.clipboard.writeText(`${redditTitle}\n\n${redditBody}`);
+  const handleCopyReddit = async () => {
+    await copyTextToClipboard(`${redditTitle}\n\n${redditBody}`);
     setCopiedReddit(true);
     setTimeout(() => setCopiedReddit(false), 2000);
   };

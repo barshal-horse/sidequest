@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Drop, MetroCity, DropCategory, UserProfile, UserLocation } from '@/types';
-import { METRO_CITIES, INITIAL_DROPS, generateRandomPersona } from './constants';
+import { Drop, MetroCity, DropCategory, UserProfile, UserLocation, ChatMessage } from '@/types';
+import { METRO_CITIES, INITIAL_DROPS, INITIAL_DROP_CHATS, generateRandomPersona } from './constants';
 import { toggleMuteSound } from './audio';
 
 const DEFAULT_NEW_EXPLORER: UserProfile = {
@@ -28,6 +28,7 @@ interface SideQuestStore {
   selectedCategory: DropCategory | 'ALL';
   isGirlsOnlyFilter: boolean;
   drops: Drop[];
+  dropChats: Record<string, ChatMessage[]>;
   currentUser: UserProfile;
   userLocation: UserLocation | null;
   inspectedMember: UserProfile | null;
@@ -47,6 +48,7 @@ interface SideQuestStore {
   setSelectedCategory: (cat: DropCategory | 'ALL') => void;
   toggleGirlsOnlyFilter: () => void;
   setActiveDropId: (id: string | null) => void;
+  sendDropMessage: (dropId: string, text: string) => void;
   setUserLocation: (loc: UserLocation | null) => void;
   setLocationModalOpen: (open: boolean) => void;
   setLocationCoords: (lat: number, lng: number, addressName?: string, isLiveGps?: boolean) => void;
@@ -76,6 +78,7 @@ export const useSideQuestStore = create<SideQuestStore>()(
       selectedCategory: 'ALL',
       isGirlsOnlyFilter: false,
       drops: INITIAL_DROPS,
+      dropChats: INITIAL_DROP_CHATS,
       currentUser: DEFAULT_NEW_EXPLORER,
       userLocation: null,
       inspectedMember: null,
@@ -203,11 +206,39 @@ export const useSideQuestStore = create<SideQuestStore>()(
         }));
       },
 
+      sendDropMessage: (dropId: string, text: string) => {
+        if (!text || !text.trim()) return;
+        const user = get().currentUser;
+        const drop = get().drops.find(d => d.id === dropId);
+        const isHost = drop ? drop.host.id === user.id : false;
+
+        const newMsg: ChatMessage = {
+          id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          dropId,
+          userId: user.id,
+          handle: user.handle,
+          fullName: user.fullName,
+          avatarUrl: user.avatarUrl,
+          text: text.trim(),
+          timestamp: 'Just now',
+          isSystem: false,
+          isHost
+        };
+
+        set(state => ({
+          dropChats: {
+            ...state.dropChats,
+            [dropId]: [...(state.dropChats[dropId] || []), newMsg]
+          }
+        }));
+      },
+
       createDrop: (dropData) => {
         const user = get().currentUser;
+        const dropId = `drop-${Date.now()}`;
         const newDrop: Drop = {
           ...dropData,
-          id: `drop-${Date.now()}`,
+          id: dropId,
           createdAt: new Date().toISOString(),
           status: 'OPEN',
           currentSlots: 1,
@@ -224,8 +255,25 @@ export const useSideQuestStore = create<SideQuestStore>()(
           ]
         };
 
+        const initialHostMsg: ChatMessage = {
+          id: `msg-${Date.now()}-init`,
+          dropId,
+          userId: user.id,
+          handle: user.handle,
+          fullName: user.fullName,
+          avatarUrl: user.avatarUrl,
+          text: `Flare ignited at ${newDrop.venueName}! Heading there now, squad assemble 🚀`,
+          timestamp: 'Just now',
+          isSystem: false,
+          isHost: true
+        };
+
         set(state => ({
           drops: [newDrop, ...state.drops],
+          dropChats: {
+            ...state.dropChats,
+            [dropId]: [initialHostMsg]
+          },
           isCreateSheetOpen: false,
           activeDropId: newDrop.id,
           activeTab: 'radar'
@@ -269,8 +317,24 @@ export const useSideQuestStore = create<SideQuestStore>()(
           status: updatedMembers.length >= drop.maxSlots ? 'CONFIRMED' : 'OPEN'
         };
 
+        const joinNotice: ChatMessage = {
+          id: `msg-sys-${Date.now()}`,
+          dropId,
+          userId: user.id,
+          handle: user.handle,
+          fullName: user.fullName,
+          avatarUrl: user.avatarUrl,
+          text: `${user.fullName.split(' ')[0]} joined the party squad! 👋`,
+          timestamp: 'Just now',
+          isSystem: true
+        };
+
         set(state => ({
-          drops: state.drops.map(d => d.id === dropId ? updatedDrop : d)
+          drops: state.drops.map(d => d.id === dropId ? updatedDrop : d),
+          dropChats: {
+            ...state.dropChats,
+            [dropId]: [...(state.dropChats[dropId] || []), joinNotice]
+          }
         }));
 
         return true;
@@ -303,8 +367,24 @@ export const useSideQuestStore = create<SideQuestStore>()(
           m.userId === user.id ? { ...m, checkedIn: true } : m
         );
 
+        const checkInNotice: ChatMessage = {
+          id: `msg-sys-${Date.now()}`,
+          dropId,
+          userId: user.id,
+          handle: user.handle,
+          fullName: user.fullName,
+          avatarUrl: user.avatarUrl,
+          text: `📍 ${user.fullName.split(' ')[0]} verified live GPS check-in at ${drop.venueName}! (+10 Karma)`,
+          timestamp: 'Just now',
+          isSystem: true
+        };
+
         set(state => ({
           drops: state.drops.map(d => d.id === dropId ? { ...d, members: updatedMembers } : d),
+          dropChats: {
+            ...state.dropChats,
+            [dropId]: [...(state.dropChats[dropId] || []), checkInNotice]
+          },
           currentUser: {
             ...state.currentUser,
             karmaScore: Math.min(100, state.currentUser.karmaScore + 10),
@@ -321,7 +401,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
         isAuthenticated: state.isAuthenticated,
         selectedCity: state.selectedCity,
         soundEnabled: state.soundEnabled,
-        userLocation: state.userLocation
+        userLocation: state.userLocation,
+        dropChats: state.dropChats
       })
     }
   )

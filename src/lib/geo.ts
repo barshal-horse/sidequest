@@ -40,8 +40,11 @@ export interface MetroCityCoord {
 export function findClosestMetro<T extends MetroCityCoord>(
   lat: number,
   lon: number,
-  cities: T[]
-): { city: T; distanceMeters: number } {
+  cities?: T[]
+): { city?: T; distanceMeters: number } {
+  if (!cities || cities.length === 0) {
+    return { city: undefined, distanceMeters: Infinity };
+  }
   let closest = cities[0];
   let minDistance = calculateDistanceInMeters(lat, lon, closest.center[1], closest.center[0]);
 

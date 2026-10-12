@@ -84,4 +84,6 @@ export interface ChatMessage {
   text: string;
   timestamp: string;
   isSystem?: boolean;
+  isHost?: boolean;
 }
+

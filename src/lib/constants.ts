@@ -1,4 +1,5 @@
-import { MetroCity, Drop, UserProfile } from '@/types';
+import { MetroCity, Drop, UserProfile, ChatMessage } from '@/types';
+
 
 export const METRO_CITIES: MetroCity[] = [
   {
@@ -341,8 +342,338 @@ export const INITIAL_DROPS: Drop[] = [
     createdAt: new Date().toISOString(),
     tags: ['Indie Jam', 'Music', 'Chai'],
     aiVibeNote: 'Bring your instrument or just come vibe. Indie folk, acoustic & pop.'
+  },
+
+  // HYDERABAD DROPS
+  {
+    id: 'hyd-drop-1',
+    title: 'Cold Brew & Distributed Systems Chat',
+    category: 'COWORK_DEV',
+    cityId: 'hyderabad',
+    hotspotName: 'Jubilee Hills & HITEC City',
+    venueName: 'Roastery Coffee House Courtyard, Road 45 Jubilee Hills',
+    lat: 17.4319,
+    lng: 78.4073,
+    host: {
+      id: 'user-nikhil',
+      handle: 'nikhil.sys',
+      fullName: 'Nikhil Reddy',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      city: 'Hyderabad',
+      karmaScore: 97,
+      questsCompleted: 19,
+      flakeRate: 0,
+      isVerified: true,
+      badges: ['⚡ Backend Architect', '🔥 100% Show-Up']
+    },
+    maxSlots: 4,
+    currentSlots: 2,
+    members: [
+      { userId: 'user-nikhil', handle: 'nikhil.sys', fullName: 'Nikhil Reddy', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', isHost: true, checkedIn: true, joinedAt: '16:00' },
+      { userId: 'user-pranavi', handle: 'pranavi.ai', fullName: 'Pranavi Rao', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', isHost: false, checkedIn: false, joinedAt: '16:15' }
+    ],
+    isGirlsOnly: false,
+    status: 'OPEN',
+    expiresAt: expiresMinutesFromNow(55),
+    createdAt: new Date().toISOString(),
+    tags: ['Dev', 'Cold Brew', 'High Entropy'],
+    aiVibeNote: 'Roastery courtyard table reserved. Casual debate on Rust vs Go & late-night biryani lore.'
+  },
+
+  // CHENNAI DROPS
+  {
+    id: 'chn-drop-1',
+    title: 'Bessie Beach Sea Breeze & Degree Filter Coffee',
+    category: 'CHAI_FOOD',
+    cityId: 'chennai',
+    hotspotName: 'Besant Nagar (Edward Elliot Beach)',
+    venueName: 'Murugan Idli Shop & Beach Promenade Walk',
+    lat: 13.0001,
+    lng: 80.2690,
+    host: {
+      id: 'user-karthik',
+      handle: 'karthik.sea',
+      fullName: 'Karthik Subramanian',
+      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      city: 'Chennai',
+      karmaScore: 96,
+      questsCompleted: 15,
+      flakeRate: 0,
+      isVerified: true,
+      badges: ['🌊 Beach Cruiser', '⚡ Verified Host']
+    },
+    maxSlots: 4,
+    currentSlots: 2,
+    members: [
+      { userId: 'user-karthik', handle: 'karthik.sea', fullName: 'Karthik Subramanian', avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', isHost: true, checkedIn: true, joinedAt: '06:30' },
+      { userId: 'user-swetha', handle: 'swetha.art', fullName: 'Swetha Nathan', avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', isHost: false, checkedIn: false, joinedAt: '06:40' }
+    ],
+    isGirlsOnly: false,
+    status: 'OPEN',
+    expiresAt: expiresMinutesFromNow(45),
+    createdAt: new Date().toISOString(),
+    tags: ['Filter Coffee', 'Sunrise', 'Conversations'],
+    aiVibeNote: 'Bessie promenade morning cool breeze. Fresh brass degree filter coffee on the go.'
+  },
+
+  // KOLKATA DROPS
+  {
+    id: 'kol-drop-1',
+    title: 'Park Street Vintage Tea & Indie Book Swap',
+    category: 'GIGS_CULTURE',
+    cityId: 'kolkata',
+    hotspotName: 'Park Street & Camac Street',
+    venueName: 'Flurys Heritage Tea Room, 18 Park Street',
+    lat: 22.5519,
+    lng: 88.3516,
+    host: {
+      id: 'user-sourav',
+      handle: 'sourav.lit',
+      fullName: 'Sourav Banerjee',
+      avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+      city: 'Kolkata',
+      karmaScore: 98,
+      questsCompleted: 22,
+      flakeRate: 0,
+      isVerified: true,
+      badges: ['📖 Book Hound', '⚡ Flurys Regular']
+    },
+    maxSlots: 3,
+    currentSlots: 2,
+    members: [
+      { userId: 'user-sourav', handle: 'sourav.lit', fullName: 'Sourav Banerjee', avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80', isHost: true, checkedIn: false, joinedAt: '16:00' },
+      { userId: 'user-ananya-c', handle: 'ananya.kol', fullName: 'Ananya Chatterjee', avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80', isHost: false, checkedIn: false, joinedAt: '16:10' }
+    ],
+    isGirlsOnly: false,
+    status: 'OPEN',
+    expiresAt: expiresMinutesFromNow(40),
+    createdAt: new Date().toISOString(),
+    tags: ['Flurys', 'Books', 'Tea Room'],
+    aiVibeNote: 'Window table at historic Flurys. Bring a paperback you loved or just come for Darjeeling first flush.'
   }
 ];
+
+// Distinct, authenticated initial chat message threads for every single drop flare
+export const INITIAL_DROP_CHATS: Record<string, ChatMessage[]> = {
+  'blr-drop-1': [
+    {
+      id: 'msg-blr1-1',
+      dropId: 'blr-drop-1',
+      userId: 'user-aarav',
+      handle: 'aarav.dev',
+      fullName: 'Aarav Sharma',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      text: 'Reached venue! Sanjay tea stall is open and adrak chai is brewing 🧋',
+      timestamp: '10m ago',
+      isHost: true
+    },
+    {
+      id: 'msg-blr1-2',
+      dropId: 'blr-drop-1',
+      userId: 'user-sneha',
+      handle: 'sneha.ui',
+      fullName: 'Sneha Patel',
+      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+      text: 'Coming down in 2 mins from 5th Block, save a bun maska for me!',
+      timestamp: '6m ago',
+      isHost: false
+    },
+    {
+      id: 'msg-blr1-3',
+      dropId: 'blr-drop-1',
+      userId: 'user-rohan',
+      handle: 'rohan.ai',
+      fullName: 'Rohan Verma',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      text: 'Parking the scooter near Sony signal right now, see you in 1 min',
+      timestamp: '2m ago',
+      isHost: false
+    }
+  ],
+  'blr-drop-2': [
+    {
+      id: 'msg-blr2-1',
+      dropId: 'blr-drop-2',
+      userId: 'user-kavya',
+      handle: 'kavya.badm',
+      fullName: 'Kavya Rao',
+      avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+      text: 'Court 3 confirmed at Playo HSR! Non-marking shoes mandatory 🏸',
+      timestamp: '15m ago',
+      isHost: true
+    },
+    {
+      id: 'msg-blr2-2',
+      dropId: 'blr-drop-2',
+      userId: 'user-vikram',
+      handle: 'vikram.k',
+      fullName: 'Vikram Joshi',
+      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      text: 'Brought an extra Yonex racquet and Mavis 350 nylon shuttles!',
+      timestamp: '8m ago',
+      isHost: false
+    }
+  ],
+  'blr-drop-3': [
+    {
+      id: 'msg-blr3-1',
+      dropId: 'blr-drop-3',
+      userId: 'user-harshal',
+      handle: 'harshal.b',
+      fullName: 'Harshal Borse',
+      avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+      text: 'Grabbed corner sofa table on the 12th Main rooftop near the power sockets 💻',
+      timestamp: '12m ago',
+      isHost: true
+    },
+    {
+      id: 'msg-blr3-2',
+      dropId: 'blr-drop-3',
+      userId: 'user-tanvi',
+      handle: 'tanvi.dev',
+      fullName: 'Tanvi Shah',
+      avatarUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80',
+      text: 'Ordering an iced americano downstairs, let\'s ship this release!',
+      timestamp: '5m ago',
+      isHost: false
+    }
+  ],
+  'mum-drop-1': [
+    {
+      id: 'msg-mum1-1',
+      dropId: 'mum-drop-1',
+      userId: 'user-ananya',
+      handle: 'ananya.m',
+      fullName: 'Ananya Mehra',
+      avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+      text: 'Sitting on the Carter Road amphitheatre steps, sea breeze is perfect today 🌊',
+      timestamp: '18m ago',
+      isHost: true
+    },
+    {
+      id: 'msg-mum1-2',
+      dropId: 'mum-drop-1',
+      userId: 'user-riya',
+      handle: 'riya.w',
+      fullName: 'Riya Wadhwa',
+      avatarUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80',
+      text: 'Grabbing iced coffee from CCD near the entrance, see you in 3 mins! 🌸',
+      timestamp: '7m ago',
+      isHost: false
+    }
+  ],
+  'mum-drop-2': [
+    {
+      id: 'msg-mum2-1',
+      dropId: 'mum-drop-2',
+      userId: 'user-neil',
+      handle: 'neil.comedy',
+      fullName: 'Neil Fernandez',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      text: 'Habitat doors open in 20 mins! 5 new comics testing bits tonight 🎭',
+      timestamp: '14m ago',
+      isHost: true
+    }
+  ],
+  'del-drop-1': [
+    {
+      id: 'msg-del1-1',
+      dropId: 'del-drop-1',
+      userId: 'user-kabir',
+      handle: 'kabir.run',
+      fullName: 'Kabir Bakshi',
+      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      text: 'Stretching by Deer Park main gate! Pace will be easy 5:45 min/km 🏃',
+      timestamp: '9m ago',
+      isHost: true
+    }
+  ],
+  'pun-drop-1': [
+    {
+      id: 'msg-pun1-1',
+      dropId: 'pun-drop-1',
+      userId: 'user-zoya',
+      handle: 'zoya.beats',
+      fullName: 'Zoya Akhtar',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      text: 'Patio table at Lane 7! Tuned the acoustic guitar, drop by if you\'re near 🎸',
+      timestamp: '11m ago',
+      isHost: true
+    }
+  ],
+  'hyd-drop-1': [
+    {
+      id: 'msg-hyd1-1',
+      dropId: 'hyd-drop-1',
+      userId: 'user-nikhil',
+      handle: 'nikhil.sys',
+      fullName: 'Nikhil Reddy',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      text: 'Courtyard table under the mango tree at Roastery! Cold brew ordered ☕',
+      timestamp: '16m ago',
+      isHost: true
+    },
+    {
+      id: 'msg-hyd1-2',
+      dropId: 'hyd-drop-1',
+      userId: 'user-pranavi',
+      handle: 'pranavi.ai',
+      fullName: 'Pranavi Rao',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      text: 'Just pulled into Road 45 parking, walking inside now!',
+      timestamp: '6m ago',
+      isHost: false
+    }
+  ],
+  'chn-drop-1': [
+    {
+      id: 'msg-chn1-1',
+      dropId: 'chn-drop-1',
+      userId: 'user-karthik',
+      handle: 'karthik.sea',
+      fullName: 'Karthik Subramanian',
+      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      text: 'Bessie beach breeze is hitting! Filter coffee counter is live 🌊',
+      timestamp: '15m ago',
+      isHost: true
+    },
+    {
+      id: 'msg-chn1-2',
+      dropId: 'chn-drop-1',
+      userId: 'user-swetha',
+      handle: 'swetha.art',
+      fullName: 'Swetha Nathan',
+      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+      text: 'Heading down the walkway, save a hot tumbler for me!',
+      timestamp: '5m ago',
+      isHost: false
+    }
+  ],
+  'kol-drop-1': [
+    {
+      id: 'msg-kol1-1',
+      dropId: 'kol-drop-1',
+      userId: 'user-sourav',
+      handle: 'sourav.lit',
+      fullName: 'Sourav Banerjee',
+      avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+      text: 'Window table at Flurys, rum balls and Darjeeling tea on the table 🍰',
+      timestamp: '14m ago',
+      isHost: true
+    },
+    {
+      id: 'msg-kol1-2',
+      dropId: 'kol-drop-1',
+      userId: 'user-ananya-c',
+      handle: 'ananya.kol',
+      fullName: 'Ananya Chatterjee',
+      avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+      text: 'Crossing Park Street from Oxford bookstore, see you in 2 mins!',
+      timestamp: '4m ago',
+      isHost: false
+    }
+  ]
+};
 
 export const DEMO_PROFILES: UserProfile[] = [
   {

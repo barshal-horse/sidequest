@@ -225,13 +225,15 @@ export default function MetroMap() {
         playGlideWhoosh();
 
         const closest = findClosestMetro(lat, lng, METRO_CITIES);
-        if (closest.city.id !== selectedCity.id) {
-          setSelectedCity(closest.city.id);
-          setGpsToast(`GPS Locked! Auto-switched to closest metro: ${closest.city.name} (${(closest.distanceMeters / 1000).toFixed(0)}km away)`);
-        } else {
-          setGpsToast(`GPS Locked! You are in ${closest.city.name}`);
+        if (closest.city) {
+          if (closest.city.id !== selectedCity.id) {
+            setSelectedCity(closest.city.id);
+            setGpsToast(`GPS Locked! Auto-switched to closest metro: ${closest.city.name} (${(closest.distanceMeters / 1000).toFixed(0)}km away)`);
+          } else {
+            setGpsToast(`GPS Locked! You are in ${closest.city.name}`);
+          }
+          setTimeout(() => setGpsToast(null), 4500);
         }
-        setTimeout(() => setGpsToast(null), 4500);
 
         mapRef.current?.flyTo({
           center: [lng, lat],

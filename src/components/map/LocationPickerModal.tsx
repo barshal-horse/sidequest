@@ -43,7 +43,7 @@ export default function LocationPickerModal() {
 
         // Auto-detect closest metro city
         const closest = findClosestMetro(lat, lng, METRO_CITIES);
-        if (closest.city.id !== selectedCity.id) {
+        if (closest.city && closest.city.id !== selectedCity.id) {
           setSelectedCity(closest.city.id);
         }
 
