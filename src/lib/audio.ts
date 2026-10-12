@@ -108,3 +108,67 @@ export function playGlideWhoosh() {
     // Silently ignore
   }
 }
+
+// Crisp Mechanical Camera Shutter Click
+export function playCameraShutter() {
+  if (isMuted) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    // First shutter snap (curtain open)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(1800, ctx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.04);
+    gain1.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start();
+    osc1.stop(ctx.currentTime + 0.05);
+
+    // Second shutter snap (curtain close)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(900, ctx.currentTime + 0.06);
+    osc2.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.12);
+    gain2.gain.setValueAtTime(0.15, ctx.currentTime + 0.06);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.06);
+    osc2.stop(ctx.currentTime + 0.12);
+  } catch (e) {
+    // Silently ignore
+  }
+}
+
+// Polaroid Motor Film Eject Whirr
+export function playFilmEject() {
+  if (isMuted) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(260, ctx.currentTime + 0.15);
+    osc.frequency.linearRampToValueAtTime(180, ctx.currentTime + 0.35);
+
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.35);
+  } catch (e) {
+    // Silently ignore
+  }
+}

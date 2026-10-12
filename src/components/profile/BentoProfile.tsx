@@ -5,7 +5,7 @@ import { useSideQuestStore } from '@/lib/store';
 import { 
   ShieldCheck, Sparkles, Music, Flame, Zap, Award, 
   Share2, Check, ExternalLink, Dices, UserPlus, Users, Radio, Tag, 
-  Search, Shuffle, SlidersHorizontal 
+  Search, Shuffle, SlidersHorizontal, Camera 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { DEMO_PROFILES, generateRandomPersona, GEN_Z_VIBE_TAGS, LIVE_STATUS_OPTIONS, DEFAULT_SCRAPBOOK_MEMORIES } from '@/lib/constants';
@@ -18,6 +18,7 @@ export default function BentoProfile() {
     setAuthModalOpen, 
     setSpotifyModalOpen,
     setScrapbookModalOpen,
+    setInstantCamOpen,
     disconnectSpotify,
     switchProfile,
     resetToNewIndividual,
@@ -422,9 +423,22 @@ export default function BentoProfile() {
                     <span className="text-xs font-mono font-bold text-[#8E8E9F] group-hover:text-[#00F0FF] uppercase tracking-wider flex items-center gap-1.5 transition-colors">
                       <Sparkles className="w-3.5 h-3.5 text-[#00F0FF]" /> MEMORY SCRAPBOOK
                     </span>
-                    <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 font-bold">
-                      {memoryList.length} POLAROIDS
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playRadarBlip();
+                          setInstantCamOpen(true);
+                        }}
+                        className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#CCFF00] hover:bg-[#b8e600] text-[#0A0A0C] font-bold flex items-center gap-1 shadow-sm transition-transform hover:scale-105"
+                      >
+                        <Camera className="w-3 h-3 text-[#0A0A0C]" /> Snap
+                      </button>
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 font-bold">
+                        {memoryList.length}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Polaroid Frame */}
@@ -454,8 +468,15 @@ export default function BentoProfile() {
                   <span className="text-[#00F0FF] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                     <span>View Album</span> &rarr;
                   </span>
-                  <span className="text-[#8E8E9F]">
-                    Tap to Flip & Sign
+                  <span 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playRadarBlip();
+                      setInstantCamOpen(true);
+                    }}
+                    className="text-[#CCFF00] font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                  >
+                    <Camera className="w-3 h-3" /> Snap Polaroid
                   </span>
                 </div>
               </>

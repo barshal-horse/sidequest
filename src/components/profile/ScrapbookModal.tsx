@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { ScrapbookMemory } from '@/types';
 import { 
-  X, Sparkles, Heart, Plus, Camera, MapPin, Calendar, Users, RotateCw, Share2, Check, Tag 
+  X, Sparkles, Heart, Plus, Camera, MapPin, Calendar, Users, RotateCw, Share2, Check, Tag, Image as ImageIcon 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playCheckInChime, playRadarBlip } from '@/lib/audio';
@@ -41,12 +41,14 @@ export default function ScrapbookModal() {
   const { 
     isScrapbookModalOpen, 
     setScrapbookModalOpen, 
+    setInstantCamOpen,
     currentUser, 
     addScrapbookMemory, 
     likeScrapbookMemory,
     selectedCity 
   } = useSideQuestStore();
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<'gallery' | 'add'>('gallery');
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -59,6 +61,20 @@ export default function ScrapbookModal() {
   const [caption, setCaption] = useState('');
   const [vibeTag, setVibeTag] = useState(PHOTO_PRESETS[0].tag);
   const [notes, setNotes] = useState('');
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setCustomPhotoUrl(result);
+        playRadarBlip();
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   if (!isScrapbookModalOpen) return null;
 
@@ -145,12 +161,25 @@ export default function ScrapbookModal() {
               </p>
             </div>
           </div>
-          <button 
-            onClick={() => setScrapbookModalOpen(false)}
-            className="p-1 rounded-lg text-[#8E8E9F] hover:text-[#F4F4F6] hover:bg-[#1B1B22] transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                playRadarBlip();
+                setInstantCamOpen(true);
+              }}
+              className="py-1 px-2.5 rounded-full bg-[#CCFF00] hover:bg-[#b8e600] text-[#0A0A0C] font-mono font-bold text-[11px] flex items-center gap-1 shadow-[0_0_12px_rgba(204,255,0,0.3)] transition-all hover:scale-105"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Instant Snap</span>
+            </button>
+            <button 
+              onClick={() => setScrapbookModalOpen(false)}
+              className="p-1 rounded-lg text-[#8E8E9F] hover:text-[#F4F4F6] hover:bg-[#1B1B22] transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Tab Switcher */}
@@ -362,11 +391,76 @@ export default function ScrapbookModal() {
               />
             </div>
 
+            {/* Hidden Native File Input for Camera Roll / Photo Picker */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+
+            {/* Instant Camera / Roll Action Bar */}
+            <div className="p-3 rounded-2xl bg-[#141418] border border-[#24242B] space-y-2.5">
+              <div className="flex items-center justify-between text-[11px] font-mono">
+                <span className="text-[#8E8E9F] font-bold">SNAP OR UPLOAD REAL PHOTO</span>
+                <span className="text-[10px] text-[#CCFF00]">Zero Links Required</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScrapbookModalOpen(false);
+                    setInstantCamOpen(true);
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#CCFF00] to-[#00F0FF] text-[#0A0A0C] font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(204,255,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  <Camera className="w-4 h-4 text-[#0A0A0C]" />
+                  <span>Instant Cam</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="py-2.5 px-3 rounded-xl bg-[#1B1B22] hover:bg-[#252530] border border-[#2E2E38] text-[#F4F4F6] font-mono font-bold text-xs flex items-center justify-center gap-1.5 hover:border-[#00F0FF] transition-all"
+                >
+                  <ImageIcon className="w-4 h-4 text-[#00F0FF]" />
+                  <span>Camera Roll</span>
+                </button>
+              </div>
+
+              {/* Uploaded Custom Photo Preview Banner */}
+              {customPhotoUrl && (
+                <div className="relative p-2 rounded-xl bg-[#0A0A0C] border border-[#CCFF00]/40 flex items-center gap-3">
+                  <img
+                    src={customPhotoUrl}
+                    alt="Custom Upload"
+                    className="w-14 h-14 rounded-lg object-cover border border-[#24242B]"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-mono font-bold text-[#CCFF00] flex items-center gap-1">
+                      <Check className="w-3 h-3" /> CUSTOM PHOTO ATTACHED
+                    </span>
+                    <p className="text-[9px] font-mono text-[#8E8E9F] truncate">
+                      Ready to develop into Polaroid frame
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCustomPhotoUrl('')}
+                    className="p-1.5 rounded-lg bg-[#1B1B22] hover:bg-[#2A2A35] text-[#8E8E9F] hover:text-[#FF4D4D] text-[10px] font-mono font-bold transition-colors"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Aesthetic Photo Preset Selector */}
             <div>
               <label className="block text-[11px] font-mono text-[#8E8E9F] mb-1.5 flex items-center justify-between">
-                <span>CHOOSE POLAROID PHOTO AESTHETIC</span>
-                <span className="text-[10px] text-[#00F0FF]">Film Preset</span>
+                <span>OR PICK A FILM PRESET LOOK</span>
+                <span className="text-[10px] text-[#00F0FF]">Quick Fallback</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {PHOTO_PRESETS.map((preset) => {
@@ -402,20 +496,6 @@ export default function ScrapbookModal() {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Custom Photo URL Input */}
-            <div>
-              <label className="block text-[11px] font-mono text-[#8E8E9F] mb-1">
-                OR PASTE CUSTOM IMAGE URL
-              </label>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={customPhotoUrl}
-                onChange={e => setCustomPhotoUrl(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-[#141418] border border-[#24242B] focus:border-[#CCFF00] text-xs text-[#F4F4F6] font-mono outline-none"
-              />
             </div>
 
             {/* Venue / Location */}

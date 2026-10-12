@@ -14,8 +14,9 @@ import MemberProfileModal from '@/components/profile/MemberProfileModal';
 import LocationPickerModal from '@/components/map/LocationPickerModal';
 import SpotifyConnectModal from '@/components/profile/SpotifyConnectModal';
 import ScrapbookModal from '@/components/profile/ScrapbookModal';
+import InstantPolaroidCamModal from '@/components/profile/InstantPolaroidCamModal';
 import { 
-  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX, Navigation, MapPin 
+  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX, Navigation, MapPin, Camera 
 } from 'lucide-react';
 import { playGlideWhoosh, playRadarBlip } from '@/lib/audio';
 
@@ -45,7 +46,8 @@ export default function Home() {
     soundEnabled,
     toggleSound,
     userLocation,
-    setLocationModalOpen
+    setLocationModalOpen,
+    setInstantCamOpen
   } = useSideQuestStore();
 
   const cityDropsCount = drops.filter(d => d.cityId === selectedCity.id).length;
@@ -122,8 +124,20 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Header Area: Audio Synth Toggle & Telemetry Pill */}
+          {/* Right Header Area: Audio Synth Toggle, Instant Snap Cam & Telemetry Pill */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                playRadarBlip();
+                setInstantCamOpen(true);
+              }}
+              className="py-1 px-2.5 rounded-full border border-[#00F0FF]/40 bg-[#00F0FF]/15 text-[#00F0FF] hover:bg-[#00F0FF]/25 font-mono text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-[0_0_10px_rgba(0,240,255,0.2)] hover:scale-105"
+              title="Snap Instant Polaroid Memory"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Snap</span>
+            </button>
+
             <button
               onClick={toggleSound}
               className={`p-1.5 rounded-full border transition-all flex items-center justify-center ${
@@ -312,6 +326,7 @@ export default function Home() {
       <LocationPickerModal />
       <SpotifyConnectModal />
       <ScrapbookModal />
+      <InstantPolaroidCamModal />
     </main>
   );
 }

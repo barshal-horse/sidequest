@@ -43,6 +43,7 @@ interface SideQuestStore {
   isLocationModalOpen: boolean;
   isScrapbookModalOpen: boolean;
   isSpotifyModalOpen: boolean;
+  isInstantCamOpen: boolean;
   activeDropId: string | null;
   isCreateSheetOpen: boolean;
   isShareModalOpen: boolean;
@@ -60,6 +61,7 @@ interface SideQuestStore {
   setLocationModalOpen: (open: boolean) => void;
   setScrapbookModalOpen: (open: boolean) => void;
   setSpotifyModalOpen: (open: boolean) => void;
+  setInstantCamOpen: (open: boolean) => void;
   connectSpotify: (trackAndArtist: string, audioAura?: string) => void;
   disconnectSpotify: () => void;
   addScrapbookMemory: (memory: Omit<ScrapbookMemory, 'id' | 'likes'>) => void;
@@ -105,6 +107,7 @@ export const useSideQuestStore = create<SideQuestStore>()(
       isLocationModalOpen: false,
       isScrapbookModalOpen: false,
       isSpotifyModalOpen: false,
+      isInstantCamOpen: false,
       activeDropId: null,
       isCreateSheetOpen: false,
       isShareModalOpen: false,
@@ -131,6 +134,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
       setScrapbookModalOpen: (open: boolean) => set({ isScrapbookModalOpen: open }),
 
       setSpotifyModalOpen: (open: boolean) => set({ isSpotifyModalOpen: open }),
+
+      setInstantCamOpen: (open: boolean) => set({ isInstantCamOpen: open }),
 
       connectSpotify: (trackAndArtist: string, audioAura?: string) => {
         const artist = trackAndArtist.includes(' - ') ? trackAndArtist.split(' - ')[0].trim() : trackAndArtist.trim();
