@@ -13,7 +13,8 @@ export default function CreateDropSheet() {
     setCreateSheetOpen, 
     selectedCity, 
     createDrop, 
-    currentUser 
+    currentUser,
+    userLocation 
   } = useSideQuestStore();
 
   const [title, setTitle] = useState('');
@@ -25,25 +26,28 @@ export default function CreateDropSheet() {
   const [isGirlsOnly, setIsGirlsOnly] = useState(false);
 
   useEffect(() => {
-    if (selectedCity.hotspots.length > 0 && !selectedCity.hotspots.some(h => h.id === hotspotId)) {
+    if (selectedCity.hotspots.length > 0 && !selectedCity.hotspots.some(h => h.id === hotspotId) && hotspotId !== 'user_pin') {
       setHotspotId(selectedCity.hotspots[0].id);
     }
   }, [selectedCity, hotspotId]);
 
   if (!isCreateSheetOpen) return null;
 
-  const currentHotspot = selectedCity.hotspots.find(h => h.id === hotspotId) || selectedCity.hotspots[0];
+  const isUsingUserPin = hotspotId === 'user_pin' && !!userLocation;
+  const currentHotspot = isUsingUserPin 
+    ? { id: 'user_pin', name: userLocation.addressName || 'Current Radar Pin', lat: userLocation.lat, lng: userLocation.lng }
+    : (selectedCity.hotspots.find(h => h.id === hotspotId) || selectedCity.hotspots[0]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !venueName.trim()) return;
 
     createDrop({
-      title,
+      title: title.trim(),
       category,
       cityId: selectedCity.id,
       hotspotName: currentHotspot.name,
-      venueName,
+      venueName: venueName.trim(),
       lat: currentHotspot.lat,
       lng: currentHotspot.lng,
       host: currentUser,
@@ -61,6 +65,11 @@ export default function CreateDropSheet() {
       spread: 60,
       colors: ['#CCFF00', '#FFFFFF']
     });
+
+    // Reset form fields & close sheet cleanly
+    setTitle('');
+    setVenueName('');
+    setCreateSheetOpen(false);
   };
 
   return (
@@ -150,6 +159,11 @@ export default function CreateDropSheet() {
                 onChange={e => setHotspotId(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-[#141418] border border-[#24242B] focus:border-[#CCFF00] text-xs text-[#F4F4F6] outline-none font-mono"
               >
+                {userLocation && (
+                  <option value="user_pin" className="bg-[#141418] text-[#CCFF00]">
+                    📍 My Radar Pin ({userLocation.addressName || 'Live GPS'})
+                  </option>
+                )}
                 {selectedCity.hotspots.map(h => (
                   <option key={h.id} value={h.id}>{h.name}</option>
                 ))}

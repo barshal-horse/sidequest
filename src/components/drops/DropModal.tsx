@@ -513,14 +513,28 @@ export default function DropModal() {
                 <CheckCircle2 className="w-4 h-4" /> You Are Checked In (+10 Karma)
               </div>
             ) : (
-              <button
-                onClick={handleGpsCheckIn}
-                disabled={isVerifyingGps}
-                className="flex-1 py-2.5 rounded-lg bg-[#CCFF00] text-[#0A0A0C] font-mono font-bold text-xs hover:bg-[#b8e600] transition-colors flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(204,255,0,0.3)]"
-              >
-                <Navigation className={`w-4 h-4 ${isVerifyingGps ? 'animate-spin' : ''}`} />
-                {isVerifyingGps ? 'Verifying GPS...' : '📍 Verify GPS & Check-In (+10 Karma)'}
-              </button>
+              <div className="flex-1 flex items-center gap-2">
+                <button
+                  onClick={handleGpsCheckIn}
+                  disabled={isVerifyingGps}
+                  className="flex-1 py-2.5 rounded-lg bg-[#CCFF00] text-[#0A0A0C] font-mono font-bold text-xs hover:bg-[#b8e600] transition-colors flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(204,255,0,0.3)]"
+                >
+                  <Navigation className={`w-4 h-4 ${isVerifyingGps ? 'animate-spin' : ''}`} />
+                  {isVerifyingGps ? 'Verifying GPS...' : '📍 Verify GPS (+10 Karma)'}
+                </button>
+                {!isHost && (
+                  <button
+                    onClick={() => {
+                      playRadarBlip();
+                      leaveDrop(drop.id);
+                    }}
+                    className="py-2.5 px-3 rounded-lg bg-[#1B1B22] hover:bg-[#FF0055]/20 border border-[#24242B] hover:border-[#FF0055] text-xs font-mono text-[#8E8E9F] hover:text-[#FF0055] transition-colors whitespace-nowrap"
+                    title="Leave squad lobby and free your slot"
+                  >
+                    Leave Squad
+                  </button>
+                )}
+              </div>
             )
           ) : (
             <button

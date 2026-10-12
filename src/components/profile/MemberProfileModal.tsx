@@ -94,6 +94,34 @@ export default function MemberProfileModal() {
           </div>
         </div>
 
+        {/* Live IRL Availability */}
+        {inspectedMember.liveStatus && (
+          <div className="p-3 rounded-xl bg-[#141418] border border-[#24242B] flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#CCFF00] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#CCFF00]"></span>
+            </span>
+            <span className="text-xs font-mono text-[#8E8E9F]">STATUS:</span>
+            <span className="text-xs font-mono font-bold text-[#F4F4F6]">{inspectedMember.liveStatus}</span>
+          </div>
+        )}
+
+        {/* Hyperfixations & Vibe Tags */}
+        {inspectedMember.vibeTags && inspectedMember.vibeTags.length > 0 && (
+          <div className="p-3.5 rounded-xl bg-[#141418] border border-[#24242B] space-y-2">
+            <span className="text-xs font-mono font-bold text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-[#CCFF00]" /> CURRENT HYPERFIXATIONS
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {inspectedMember.vibeTags.map((tag, idx) => (
+                <span key={idx} className="px-2.5 py-1 rounded-lg bg-[#1B1B22] border border-[#24242B] text-xs font-mono text-[#CCFF00]">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Compatibility Bar */}
         <div className="p-3 rounded-xl bg-[#141418] border border-[#00F0FF]/30 flex items-center justify-between">
           <div className="flex items-center gap-2">

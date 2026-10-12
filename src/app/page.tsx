@@ -48,6 +48,39 @@ export default function Home() {
 
   const cityDropsCount = drops.filter(d => d.cityId === selectedCity.id).length;
 
+  // Deep-Linking & Marketing Campaigns Handler (?drop=<id>, ?city=<id>, ?tab=<tab>)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    
+    // 1. City Query Param (e.g. for r/mumbai, r/delhi targeted marketing campaigns)
+    const cityParam = params.get('city');
+    if (cityParam) {
+      const targetCity = METRO_CITIES.find(c => c.id === cityParam.toLowerCase());
+      if (targetCity && targetCity.id !== selectedCity.id) {
+        setSelectedCity(targetCity.id);
+      }
+    }
+
+    // 2. Direct Drop Flare Link (e.g. WhatsApp / Instagram invite ?drop=blr-drop-1)
+    const dropParam = params.get('drop');
+    if (dropParam) {
+      const targetDrop = drops.find(d => d.id === dropParam);
+      if (targetDrop) {
+        if (targetDrop.cityId !== selectedCity.id) {
+          setSelectedCity(targetDrop.cityId);
+        }
+        useSideQuestStore.getState().setActiveDropId(targetDrop.id);
+      }
+    }
+
+    // 3. Tab Query Param (?tab=radar | quests | profile)
+    const tabParam = params.get('tab');
+    if (tabParam === 'radar' || tabParam === 'quests' || tabParam === 'profile') {
+      setActiveTab(tabParam);
+    }
+  }, [drops, selectedCity.id, setSelectedCity, setActiveTab]);
+
   const handleTabChange = (tab: 'radar' | 'quests' | 'profile') => {
     playGlideWhoosh();
     setActiveTab(tab);

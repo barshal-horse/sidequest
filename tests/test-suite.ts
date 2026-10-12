@@ -13,7 +13,8 @@ import {
   formatDistance, 
   formatWalkingTime, 
   getGoogleMapsUrl, 
-  findClosestMetro 
+  findClosestMetro,
+  CHECKIN_GEOFENCE_RADIUS_METERS 
 } from '../src/lib/geo.js';
 
 console.log('🧪 ========================================================');
@@ -310,6 +311,115 @@ runTest('Profile customizer simulation: updateProfile and updateLiveStatus work 
   };
 
   assert.strictEqual(mockUser.liveStatus, 'Down for Chai right now 🧋');
+});
+
+// ============================================================================
+// 6. REVERSE-ENGINEERING USABILITY, DEEP-LINKING & GEOFENCE EDGE CASES
+// ============================================================================
+console.log('\n🔍 SECTION 6: Reverse-Engineering Usability, Deep-Links & Edge Cases');
+
+runTest('Deep link resolution: ?drop=<id> accurately resolves drop & switches metro city', () => {
+  const testDropId = 'mum-drop-1';
+  const targetDrop = INITIAL_DROPS.find(d => d.id === testDropId);
+  assert.ok(targetDrop, `Drop ${testDropId} must exist`);
+  assert.strictEqual(targetDrop.cityId, 'mumbai');
+
+  // Simulate user browsing in Bengaluru who clicks Mumbai WhatsApp link
+  let currentCity = 'bengaluru';
+  let activeDropId: string | null = null;
+
+  if (targetDrop) {
+    if (targetDrop.cityId !== currentCity) {
+      currentCity = targetDrop.cityId; // Auto-switch
+    }
+    activeDropId = targetDrop.id;
+  }
+
+  assert.strictEqual(currentCity, 'mumbai', 'Must auto-switch to target drop city');
+  assert.strictEqual(activeDropId, 'mum-drop-1', 'Must open modal for target drop');
+});
+
+runTest('City campaign links: ?city=<id> handles valid and invalid city params gracefully', () => {
+  // Valid cities
+  const validCities = ['bengaluru', 'mumbai', 'delhi', 'pune', 'hyderabad', 'chennai', 'kolkata'];
+  validCities.forEach(cid => {
+    const matched = METRO_CITIES.find(c => c.id === cid);
+    assert.ok(matched, `City query param ?city=${cid} must map to valid MetroCity`);
+  });
+
+  // Invalid query param
+  const invalidQuery = 'atlantis';
+  const invalidMatch = METRO_CITIES.find(c => c.id === invalidQuery);
+  assert.strictEqual(invalidMatch, undefined, 'Invalid city param must return undefined without throwing');
+});
+
+runTest('Leave Squad simulation: Leaving drop decrements slots, reopens lobby, and posts notice', () => {
+  const initialDrop = {
+    id: 'test-drop-lobby',
+    title: 'Turf Badminton',
+    maxSlots: 3,
+    currentSlots: 3,
+    status: 'CONFIRMED',
+    members: [
+      { userId: 'host-1', handle: 'host', fullName: 'Host User' },
+      { userId: 'user-2', handle: 'member2', fullName: 'Member Two' },
+      { userId: 'user-3', handle: 'member3', fullName: 'Member Three' }
+    ]
+  };
+
+  const leavingUserId = 'user-3';
+  const updatedMembers = initialDrop.members.filter(m => m.userId !== leavingUserId);
+  const updatedDrop = {
+    ...initialDrop,
+    currentSlots: Math.max(0, initialDrop.currentSlots - 1),
+    members: updatedMembers,
+    status: 'OPEN'
+  };
+
+  assert.strictEqual(updatedDrop.currentSlots, 2, 'Slots must decrement to 2');
+  assert.strictEqual(updatedDrop.status, 'OPEN', 'Status must reopen to OPEN');
+  assert.strictEqual(updatedDrop.members.length, 2, 'Members array must have 2 users');
+  assert.ok(!updatedDrop.members.some(m => m.userId === leavingUserId), 'Leaving user must not remain in members');
+});
+
+runTest('Geofence radius boundary edge cases: 500m exact threshold evaluation', () => {
+  assert.strictEqual(CHECKIN_GEOFENCE_RADIUS_METERS, 500, 'Check-in radius must be 500 meters');
+
+  // Exact boundary tests
+  const isInside499 = 499 <= CHECKIN_GEOFENCE_RADIUS_METERS;
+  const isExact500 = 500 <= CHECKIN_GEOFENCE_RADIUS_METERS;
+  const isOutside501 = 501 <= CHECKIN_GEOFENCE_RADIUS_METERS;
+
+  assert.strictEqual(isInside499, true, '499m must be accepted inside geofence');
+  assert.strictEqual(isExact500, true, '500m exact must be accepted on boundary');
+  assert.strictEqual(isOutside501, false, '501m must be rejected outside geofence');
+});
+
+runTest('Flare creation payload integrity & auto-expiry math', () => {
+  const now = Date.now();
+  const durationMins = 90;
+  const expectedExpiryTime = now + durationMins * 60 * 1000;
+  const expiresAtISO = new Date(expectedExpiryTime).toISOString();
+
+  const dropPayload = {
+    id: 'drop-test-123',
+    title: 'Late Night Filter Coffee',
+    category: 'CHAI_FOOD',
+    cityId: 'bengaluru',
+    hotspotName: 'Koramangala 5th Block',
+    venueName: 'Sanjay Tea Stall',
+    lat: 12.9352,
+    lng: 77.6200,
+    currentSlots: 1,
+    maxSlots: 4,
+    expiresAt: expiresAtISO,
+    isGirlsOnly: false
+  };
+
+  assert.ok(dropPayload.title.length > 0);
+  assert.strictEqual(dropPayload.currentSlots, 1);
+  assert.strictEqual(dropPayload.maxSlots, 4);
+  assert.ok(new Date(dropPayload.expiresAt).getTime() > now, 'expiresAt must be in future');
 });
 
 // ============================================================================

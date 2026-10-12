@@ -361,12 +361,29 @@ export const useSideQuestStore = create<SideQuestStore>()(
         const updatedDrop: Drop = {
           ...drop,
           currentSlots: Math.max(0, drop.currentSlots - 1),
-          members: updatedMembers
+          members: updatedMembers,
+          status: 'OPEN'
+        };
+
+        const leaveNotice: ChatMessage = {
+          id: `msg-sys-${Date.now()}`,
+          dropId,
+          userId: user.id,
+          handle: user.handle,
+          fullName: user.fullName,
+          avatarUrl: user.avatarUrl,
+          text: `${user.fullName.split(' ')[0]} stepped out of squad. 1 slot opened up!`,
+          timestamp: 'Just now',
+          isSystem: true
         };
 
         set(state => ({
           drops: state.drops.map(d => d.id === dropId ? updatedDrop : d),
-          activeDropId: state.activeDropId === dropId ? null : state.activeDropId
+          dropChats: {
+            ...state.dropChats,
+            [dropId]: [...(state.dropChats[dropId] || []), leaveNotice]
+          },
+          activeDropId: null
         }));
       },
 
