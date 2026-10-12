@@ -127,16 +127,30 @@ export const useSideQuestStore = create<SideQuestStore>()(
           const data = await res.json();
           if (data.drops && Array.isArray(data.drops)) {
             set(state => {
-              // Merge server drops: preserve any locally created ones not yet on server
-              const serverDropIds = new Set(data.drops.map((d: Drop) => d.id));
-              const localUnsynced = state.drops.filter(d => !serverDropIds.has(d.id));
-              const mergedDrops = [...localUnsynced, ...data.drops];
+              // Create lookup of incoming server drops
+              const serverDropMap = new Map<string, Drop>(data.drops.map((d: Drop) => [d.id, d]));
+              
+              // Update existing drops with latest server status, keep local unsynced drops
+              const updatedExisting = state.drops.map(d => serverDropMap.get(d.id) || d);
+              
+              // Find new server drops that client doesn't have yet
+              const existingIds = new Set(state.drops.map(d => d.id));
+              const brandNewServerDrops = data.drops.filter((d: Drop) => !existingIds.has(d.id));
 
-              // Merge server dropChats
-              const mergedChats = {
-                ...state.dropChats,
-                ...(data.dropChats || {})
-              };
+              const mergedDrops = [...brandNewServerDrops, ...updatedExisting];
+
+              // Merge server dropChats cleanly
+              const mergedChats: Record<string, ChatMessage[]> = { ...state.dropChats };
+              if (data.dropChats) {
+                Object.entries(data.dropChats as Record<string, ChatMessage[]>).forEach(([dropId, msgs]) => {
+                  const localMsgs = mergedChats[dropId] || [];
+                  const seenMsgIds = new Set(localMsgs.map(m => m.id));
+                  const newFromRemote = msgs.filter(m => !seenMsgIds.has(m.id));
+                  if (newFromRemote.length > 0) {
+                    mergedChats[dropId] = [...localMsgs, ...newFromRemote];
+                  }
+                });
+              }
 
               return {
                 drops: mergedDrops,
