@@ -43,14 +43,22 @@ export default function CreateDropSheet() {
     e.preventDefault();
     if (!title.trim() || !venueName.trim()) return;
 
+    // Add subtle organic micro-offset (~15-20m) so multiple different flares at the same hotspot or venue
+    // (e.g. Koramangala 5th Block) don't map to the exact same 0.000000 coordinate
+    const hash = venueName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const angle = (hash % 360) * (Math.PI / 180);
+    const jitterMeters = 15 + (hash % 15);
+    const latJitter = (jitterMeters / 111320) * Math.sin(angle);
+    const lngJitter = (jitterMeters / (111320 * Math.cos((currentHotspot.lat * Math.PI) / 180))) * Math.cos(angle);
+
     createDrop({
       title: title.trim(),
       category,
       cityId: selectedCity.id,
       hotspotName: currentHotspot.name,
       venueName: venueName.trim(),
-      lat: currentHotspot.lat,
-      lng: currentHotspot.lng,
+      lat: currentHotspot.lat + latJitter,
+      lng: currentHotspot.lng + lngJitter,
       host: currentUser,
       maxSlots,
       isGirlsOnly,

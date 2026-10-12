@@ -316,7 +316,17 @@ export default function MetroMap() {
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
 
+      // Group overlapping / co-located drops in the same spot so they disperse (spiderfy) gracefully
+      const coordCounts: Record<string, number> = {};
+      const coordIndices: Record<string, number> = {};
+
       filteredDrops.forEach(drop => {
+        // Round to 4 decimal places (~10m tolerance) to detect same spot
+        const key = `${drop.lat.toFixed(4)}_${drop.lng.toFixed(4)}`;
+        coordCounts[key] = (coordCounts[key] || 0) + 1;
+      });
+
+      filteredDrops.forEach((drop, index) => {
         const isSelected = activeDropId === drop.id;
         const isUrgent = (new Date(drop.expiresAt).getTime() - Date.now()) < 20 * 60 * 1000;
 
@@ -333,10 +343,31 @@ export default function MetroMap() {
           drop.category === 'SPORTS' ? '🏸' :
           drop.category === 'COWORK_DEV' ? '💻' : '🎭';
 
+        // Spiderfy dispersion: if multiple drops share the same area/hotspot,
+        // arrange them in a neat radial cluster so every flare is 100% visible and clickable
+        const key = `${drop.lat.toFixed(4)}_${drop.lng.toFixed(4)}`;
+        const totalAtSpot = coordCounts[key] || 1;
+        const spotIdx = coordIndices[key] || 0;
+        coordIndices[key] = spotIdx + 1;
+
+        let displayLat = drop.lat;
+        let displayLng = drop.lng;
+
+        if (totalAtSpot > 1) {
+          const angle = (2 * Math.PI * spotIdx) / totalAtSpot;
+          // ~25 meters displacement radius so nodes fan out cleanly around the venue
+          const radiusMeters = 28;
+          const latOffset = (radiusMeters / 111320) * Math.sin(angle);
+          const lngOffset = (radiusMeters / (111320 * Math.cos((drop.lat * Math.PI) / 180))) * Math.cos(angle);
+          displayLat = drop.lat + latOffset;
+          displayLng = drop.lng + lngOffset;
+        }
+
         // Custom DOM Marker element
         const el = document.createElement('div');
         el.className = 'group cursor-pointer select-none';
         el.style.transform = 'translate(-50%, -50%)';
+        el.style.zIndex = isSelected ? '50' : `${20 + index}`;
 
         el.innerHTML = `
           <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
@@ -364,15 +395,15 @@ export default function MetroMap() {
         el.addEventListener('click', () => {
           setActiveDropId(drop.id);
           mapRef.current?.flyTo({
-            center: [drop.lng, drop.lat],
-            zoom: 15.8,
+            center: [displayLng, displayLat],
+            zoom: 16.5,
             pitch: 58,
             duration: 900
           });
         });
 
         const marker = new Marker({ element: el })
-          .setLngLat([drop.lng, drop.lat])
+          .setLngLat([displayLng, displayLat])
           .addTo(mapRef.current);
 
         markersRef.current.push(marker);
