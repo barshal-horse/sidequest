@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Drop, MetroCity, DropCategory, UserProfile, UserLocation, ChatMessage } from '@/types';
-import { METRO_CITIES, INITIAL_DROPS, INITIAL_DROP_CHATS, generateRandomPersona } from './constants';
+import { METRO_CITIES, INITIAL_DROPS, INITIAL_DROP_CHATS, DEMO_PROFILES, generateRandomPersona } from './constants';
 import { toggleMuteSound } from './audio';
 
 const DEFAULT_NEW_EXPLORER: UserProfile = {
@@ -44,6 +44,7 @@ interface SideQuestStore {
   isShareModalOpen: boolean;
   selectedShareDrop: Drop | null;
   activeTab: 'radar' | 'quests' | 'profile';
+  registeredProfiles: UserProfile[];
   
   // Actions
   setSelectedCity: (cityId: string) => void;
@@ -67,6 +68,7 @@ interface SideQuestStore {
   updateLiveStatus: (status: string) => void;
   switchProfile: (profile: UserProfile) => void;
   resetToNewIndividual: () => void;
+  registerProfile: (profile: UserProfile) => void;
   
   createDrop: (newDrop: Omit<Drop, 'id' | 'createdAt' | 'status' | 'currentSlots' | 'members'>) => Drop;
   joinDrop: (dropId: string) => boolean;
@@ -83,6 +85,7 @@ export const useSideQuestStore = create<SideQuestStore>()(
       drops: INITIAL_DROPS,
       dropChats: INITIAL_DROP_CHATS,
       currentUser: DEFAULT_NEW_EXPLORER,
+      registeredProfiles: DEMO_PROFILES,
       userLocation: null,
       inspectedMember: null,
       soundEnabled: true,
@@ -178,10 +181,17 @@ export const useSideQuestStore = create<SideQuestStore>()(
           isVerified: true,
           isProfileCustomized: true
         };
-        set({
-          currentUser: newUser,
-          isAuthenticated: true,
-          isAuthModalOpen: false
+        set(state => {
+          const exists = state.registeredProfiles.some(p => p.id === newUser.id || p.handle === newUser.handle);
+          const updated = exists 
+            ? state.registeredProfiles.map(p => (p.id === newUser.id || p.handle === newUser.handle) ? newUser : p)
+            : [newUser, ...state.registeredProfiles];
+          return {
+            currentUser: newUser,
+            registeredProfiles: updated,
+            isAuthenticated: true,
+            isAuthModalOpen: false
+          };
         });
       },
 
@@ -200,22 +210,50 @@ export const useSideQuestStore = create<SideQuestStore>()(
       },
 
       updateProfile: (data: Partial<UserProfile>) => {
-        set(state => ({
-          currentUser: {
+        set(state => {
+          const updatedUser = {
             ...state.currentUser,
             ...data,
             isProfileCustomized: true
-          }
-        }));
+          };
+          const updatedProfiles = state.registeredProfiles.map(p => 
+            (p.id === updatedUser.id || p.handle === updatedUser.handle) ? updatedUser : p
+          );
+          return {
+            currentUser: updatedUser,
+            registeredProfiles: updatedProfiles
+          };
+        });
       },
 
       updateLiveStatus: (status: string) => {
-        set(state => ({
-          currentUser: {
+        set(state => {
+          const updatedUser = {
             ...state.currentUser,
             liveStatus: status
+          };
+          const updatedProfiles = state.registeredProfiles.map(p => 
+            p.id === updatedUser.id ? updatedUser : p
+          );
+          return {
+            currentUser: updatedUser,
+            registeredProfiles: updatedProfiles
+          };
+        });
+      },
+
+      registerProfile: (profile: UserProfile) => {
+        set(state => {
+          const exists = state.registeredProfiles.some(p => p.id === profile.id || p.handle === profile.handle);
+          if (exists) {
+            return {
+              registeredProfiles: state.registeredProfiles.map(p => (p.id === profile.id || p.handle === profile.handle) ? profile : p)
+            };
           }
-        }));
+          return {
+            registeredProfiles: [profile, ...state.registeredProfiles]
+          };
+        });
       },
 
       sendDropMessage: (dropId: string, text: string) => {
@@ -431,7 +469,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
         selectedCity: state.selectedCity,
         soundEnabled: state.soundEnabled,
         userLocation: state.userLocation,
-        dropChats: state.dropChats
+        dropChats: state.dropChats,
+        registeredProfiles: state.registeredProfiles
       })
     }
   )

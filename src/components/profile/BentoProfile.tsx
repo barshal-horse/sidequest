@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
   ShieldCheck, Sparkles, Music, Flame, Zap, Award, 
-  Share2, Check, ExternalLink, Dices, UserPlus, Users, Radio, Tag 
+  Share2, Check, ExternalLink, Dices, UserPlus, Users, Radio, Tag, 
+  Search, Shuffle, SlidersHorizontal 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { DEMO_PROFILES, generateRandomPersona, GEN_Z_VIBE_TAGS, LIVE_STATUS_OPTIONS } from '@/lib/constants';
@@ -19,9 +20,14 @@ export default function BentoProfile() {
     resetToNewIndividual,
     selectedCity,
     setInspectedMember,
-    updateLiveStatus
+    updateLiveStatus,
+    registeredProfiles
   } = useSideQuestStore();
   const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCityOnly, setFilterCityOnly] = useState(true);
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('ALL');
+  const [pageIndex, setPageIndex] = useState(0);
 
   const handleShareStory = () => {
     confetti({
@@ -51,6 +57,55 @@ export default function BentoProfile() {
   const handleInspect = (profile: typeof DEMO_PROFILES[0]) => {
     playRadarBlip();
     setInspectedMember(profile);
+  };
+
+  const otherProfiles = useMemo(() => {
+    const list = registeredProfiles && registeredProfiles.length > 0 ? registeredProfiles : DEMO_PROFILES;
+    return list.filter(p => p.id !== currentUser.id && p.handle !== currentUser.handle);
+  }, [registeredProfiles, currentUser]);
+
+  const filteredExplorers = useMemo(() => {
+    return otherProfiles.filter(p => {
+      // 1. City filter
+      if (filterCityOnly && p.city.toLowerCase() !== selectedCity.name.toLowerCase()) {
+        return false;
+      }
+      // 2. Status filter
+      if (selectedStatusFilter !== 'ALL' && p.liveStatus !== selectedStatusFilter) {
+        return false;
+      }
+      // 3. Search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const matchesHandle = p.handle.toLowerCase().includes(query);
+        const matchesName = p.fullName.toLowerCase().includes(query);
+        const matchesTags = p.vibeTags?.some(t => t.toLowerCase().includes(query));
+        const matchesStatus = p.liveStatus?.toLowerCase().includes(query);
+        if (!matchesHandle && !matchesName && !matchesTags && !matchesStatus) {
+          return false;
+        }
+      }
+      return true;
+    }).map(profile => {
+      // Calculate real Vibe Match %
+      let score = 72;
+      if (profile.city.toLowerCase() === currentUser.city.toLowerCase()) score += 15;
+      const sharedTags = profile.vibeTags?.filter(t => currentUser.vibeTags?.includes(t)) || [];
+      score += Math.min(12, sharedTags.length * 4);
+      return {
+        ...profile,
+        matchScore: Math.min(99, score)
+      };
+    }).sort((a, b) => b.matchScore - a.matchScore);
+  }, [otherProfiles, filterCityOnly, selectedCity.name, selectedStatusFilter, searchQuery, currentUser]);
+
+  const BATCH_SIZE = 6;
+  const totalPages = Math.max(1, Math.ceil(filteredExplorers.length / BATCH_SIZE));
+  const currentBatch = filteredExplorers.slice(pageIndex * BATCH_SIZE, (pageIndex + 1) * BATCH_SIZE);
+
+  const handleNextBatch = () => {
+    playRadarBlip();
+    setPageIndex(prev => (prev + 1) % totalPages);
   };
 
   return (
@@ -339,46 +394,209 @@ export default function BentoProfile() {
         </div>
       </div>
 
-      {/* Squad Members Directory (Read-Only Taste Graph Inspection) */}
-      <div className="p-3.5 rounded-2xl bg-[#141418] border border-[#24242B] space-y-2.5">
+      {/* Squad Discovery Hub (Scalable for 100+ Real Profiles) */}
+      <div className="p-4 rounded-2xl bg-[#141418] border border-[#24242B] space-y-3">
+        
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8E8E9F]">
             <Users className="w-3.5 h-3.5 text-[#00F0FF]" />
-            <span>DISCOVER OTHER SQUAD EXPLORERS</span>
+            <span>SQUAD RADAR // DISCOVER EXPLORERS</span>
           </div>
-          <span className="text-[10px] font-mono text-[#00F0FF] bg-[#00F0FF]/10 px-2 py-0.5 rounded-full border border-[#00F0FF]/30">
-            READ-ONLY TASTE GRAPH
+          <span className="text-[10px] font-mono text-[#00F0FF] bg-[#00F0FF]/10 px-2 py-0.5 rounded-full border border-[#00F0FF]/30 font-bold">
+            {filteredExplorers.length} EXPLORERS
           </span>
         </div>
 
-        <p className="text-[11px] font-mono text-[#8E8E9F] leading-relaxed">
-          Tap any squad member to inspect their Spotify audio aura, karma badge, and vibe compatibility:
-        </p>
+        {/* Search Bar & City Scope Switcher */}
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-[#8E8E9F] absolute left-3 top-2.5 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search by @handle, name, or vibe tag (e.g. badminton, chai)..."
+              value={searchQuery}
+              onChange={e => {
+                setSearchQuery(e.target.value);
+                setPageIndex(0);
+              }}
+              className="w-full pl-8 pr-12 py-1.5 rounded-xl bg-[#0A0A0C] border border-[#24242B] focus:border-[#00F0FF] text-xs text-[#F4F4F6] font-mono outline-none"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-2 text-[10px] font-mono text-[#8E8E9F] hover:text-[#F4F4F6]"
+              >
+                Clear
+              </button>
+            )}
+          </div>
 
-        {/* Squad Members Horizontal Scroll */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-          {DEMO_PROFILES.map((profile) => (
+          {/* Quick Filters */}
+          <div className="flex items-center justify-between gap-1 text-[11px] font-mono">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterCityOnly(true);
+                  setPageIndex(0);
+                }}
+                className={`px-2 py-0.5 rounded-lg border transition-all ${
+                  filterCityOnly 
+                    ? 'border-[#CCFF00] bg-[#CCFF00]/15 text-[#CCFF00] font-bold' 
+                    : 'border-[#24242B] text-[#8E8E9F] hover:text-[#F4F4F6]'
+                }`}
+              >
+                📍 In {selectedCity.name}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterCityOnly(false);
+                  setPageIndex(0);
+                }}
+                className={`px-2 py-0.5 rounded-lg border transition-all ${
+                  !filterCityOnly 
+                    ? 'border-[#00F0FF] bg-[#00F0FF]/15 text-[#00F0FF] font-bold' 
+                    : 'border-[#24242B] text-[#8E8E9F] hover:text-[#F4F4F6]'
+                }`}
+              >
+                🌐 All 7 Metros
+              </button>
+            </div>
+
+            {totalPages > 1 && (
+              <button
+                type="button"
+                onClick={handleNextBatch}
+                className="px-2 py-0.5 rounded-lg bg-[#1B1B22] border border-[#24242B] hover:border-[#CCFF00] text-[#CCFF00] text-[10px] font-bold flex items-center gap-1 transition-all"
+                title="Shuffle to next squad batch"
+              >
+                <Shuffle className="w-2.5 h-2.5" />
+                <span>Batch ({pageIndex + 1}/{totalPages})</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Live Status Filter Pills (Horizontal Scroll) */}
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5 text-[10px] font-mono">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedStatusFilter('ALL');
+              setPageIndex(0);
+            }}
+            className={`px-2 py-0.5 rounded-md border whitespace-nowrap transition-all ${
+              selectedStatusFilter === 'ALL'
+                ? 'border-[#CCFF00] bg-[#CCFF00] text-[#0A0A0C] font-bold'
+                : 'border-[#24242B] bg-[#141418] text-[#8E8E9F] hover:text-[#F4F4F6]'
+            }`}
+          >
+            All Statuses
+          </button>
+          {LIVE_STATUS_OPTIONS.map((status) => (
             <button
-              key={profile.id}
-              onClick={() => handleInspect(profile)}
-              className="flex-shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-[#24242B] bg-[#1B1B22] hover:border-[#00F0FF] text-left transition-all hover:scale-105"
+              key={status}
+              type="button"
+              onClick={() => {
+                setSelectedStatusFilter(selectedStatusFilter === status ? 'ALL' : status);
+                setPageIndex(0);
+              }}
+              className={`px-2 py-0.5 rounded-md border whitespace-nowrap transition-all ${
+                selectedStatusFilter === status
+                  ? 'border-[#00F0FF] bg-[#00F0FF] text-[#0A0A0C] font-bold'
+                  : 'border-[#24242B] bg-[#141418] text-[#8E8E9F] hover:text-[#F4F4F6]'
+              }`}
             >
-              <img 
-                src={profile.avatarUrl} 
-                alt={profile.handle} 
-                className="w-7 h-7 rounded-full object-cover border border-[#00F0FF]/40" 
-              />
-              <div className="flex flex-col pr-1">
-                <span className="text-[11px] font-mono font-bold text-[#F4F4F6] leading-none">
-                  @{profile.handle.split('.')[0]}
-                </span>
-                <span className="text-[9px] font-mono text-[#8E8E9F] mt-0.5">
-                  {profile.city} • {profile.karmaScore}★
-                </span>
-              </div>
+              {status}
             </button>
           ))}
         </div>
+
+        {/* Explorers Grid Display */}
+        {currentBatch.length === 0 ? (
+          <div className="p-6 text-center rounded-xl bg-[#0A0A0C] border border-[#24242B] space-y-1.5">
+            <span className="text-xl">🔍</span>
+            <p className="text-xs font-mono text-[#F4F4F6]">No squad explorers match this filter.</p>
+            <p className="text-[10px] font-mono text-[#8E8E9F]">Try toggling "All 7 Metros" or clear your search query.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setFilterCityOnly(false);
+                setSelectedStatusFilter('ALL');
+              }}
+              className="mt-2 text-[10px] font-mono text-[#CCFF00] underline"
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {currentBatch.map((profile) => (
+              <div
+                key={profile.id}
+                onClick={() => handleInspect(profile)}
+                className="p-3 rounded-xl bg-[#0A0A0C] border border-[#24242B] hover:border-[#00F0FF] cursor-pointer transition-all hover:scale-[1.01] flex flex-col justify-between space-y-2 group"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="relative shrink-0">
+                      <img
+                        src={profile.avatarUrl}
+                        alt={profile.handle}
+                        className="w-9 h-9 rounded-full object-cover border border-[#24242B] group-hover:border-[#00F0FF] transition-colors"
+                      />
+                      <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-[#CCFF00] border border-[#0A0A0C]" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-mono font-bold text-[#F4F4F6] truncate group-hover:text-[#00F0FF]">
+                          @{profile.handle}
+                        </span>
+                        {profile.gender === 'F' && <span className="text-[9px]">🌸</span>}
+                      </div>
+                      <span className="text-[10px] font-mono text-[#8E8E9F] block truncate">
+                        {profile.fullName} • {profile.city}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30">
+                    {profile.matchScore}% Match
+                  </span>
+                </div>
+
+                {/* Live Status Pill */}
+                {profile.liveStatus && (
+                  <div className="px-2 py-1 rounded-lg bg-[#141418] border border-[#1C1C24] text-[10px] font-mono text-[#CCFF00] truncate flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-pulse shrink-0" />
+                    <span className="truncate">{profile.liveStatus}</span>
+                  </div>
+                )}
+
+                {/* Vibe Tags Snippet */}
+                {profile.vibeTags && profile.vibeTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {profile.vibeTags.slice(0, 2).map((tag, idx) => (
+                      <span key={idx} className="px-1.5 py-0.5 rounded bg-[#1B1B22] text-[9px] font-mono text-[#8E8E9F] truncate">
+                        {tag}
+                      </span>
+                    ))}
+                    {profile.vibeTags.length > 2 && (
+                      <span className="text-[9px] font-mono text-[#8E8E9F] self-center">
+                        +{profile.vibeTags.length - 2}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
 
     </div>
