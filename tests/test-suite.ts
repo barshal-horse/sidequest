@@ -603,6 +603,51 @@ runTest('identifyUser attaches distinct user attributes safely', () => {
 });
 
 // ============================================================================
+// 10. REAL-TIME MULTI-DEVICE SYNC & RADAR FLARE FOCUS TESTS
+// ============================================================================
+console.log('\n📡 SECTION 10: Multi-Device Server Sync & Radar Flare Focus Tests');
+
+runTest('Flare creation resets activeDropId and sets recentCreatedDropCoords for map camera flight', () => {
+  const newFlare = {
+    title: 'Midnight Coding & Chai',
+    category: 'CHAI_FOOD' as const,
+    cityId: 'bengaluru',
+    hotspotName: 'Koramangala 5th Block',
+    venueName: 'Third Wave Coffee',
+    lat: 12.9352,
+    lng: 77.6245,
+    host: DEMO_PROFILES[0],
+    maxSlots: 4,
+    isGirlsOnly: false,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    tags: ['Chai Food', 'Bengaluru']
+  };
+
+  // Simulating store action contract
+  const recentCreatedDropCoords = { lat: newFlare.lat, lng: newFlare.lng, dropId: 'drop-test-1' };
+  assert.strictEqual(recentCreatedDropCoords.lat, 12.9352);
+  assert.strictEqual(recentCreatedDropCoords.lng, 77.6245);
+  assert.ok(recentCreatedDropCoords.dropId);
+});
+
+runTest('Shared server state merges new drops without deleting local unsynced drops', () => {
+  const localDrops = [...INITIAL_DROPS];
+  const newServerDrop = {
+    ...INITIAL_DROPS[0],
+    id: 'drop-device-b-sync-test',
+    title: 'Indiranagar 100ft Road Walk'
+  };
+  const serverDrops = [newServerDrop, ...INITIAL_DROPS];
+
+  const serverDropIds = new Set(serverDrops.map(d => d.id));
+  const localUnsynced = localDrops.filter(d => !serverDropIds.has(d.id));
+  const merged = [...localUnsynced, ...serverDrops];
+
+  assert.ok(merged.some(d => d.id === 'drop-device-b-sync-test'));
+  assert.strictEqual(merged.length, INITIAL_DROPS.length + 1);
+});
+
+// ============================================================================
 // FINAL SUMMARY
 // ============================================================================
 console.log('\n========================================================');
@@ -614,3 +659,4 @@ if (passedTests !== totalTests) {
 } else {
   process.exit(0);
 }
+

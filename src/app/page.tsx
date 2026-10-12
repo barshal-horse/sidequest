@@ -88,6 +88,34 @@ export default function Home() {
     }
   }, [drops, selectedCity.id, setSelectedCity, setActiveTab]);
 
+  // Real-Time Multi-Device Sync: Fetch server drops immediately on mount and poll every 3 seconds
+  React.useEffect(() => {
+    const sync = useSideQuestStore.getState().syncWithServer;
+    // Initial fetch
+    sync();
+
+    // Polling interval (3 seconds) for live multi-device updates across LAN/Internet
+    const interval = setInterval(() => {
+      sync();
+    }, 3000);
+
+    // Refresh immediately when user returns to this tab/window
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        sync();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, []);
+
   const handleTabChange = (tab: 'radar' | 'quests' | 'profile') => {
     playGlideWhoosh();
     setActiveTab(tab);

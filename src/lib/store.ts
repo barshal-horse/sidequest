@@ -50,8 +50,11 @@ interface SideQuestStore {
   selectedShareDrop: Drop | null;
   activeTab: 'radar' | 'quests' | 'profile';
   registeredProfiles: UserProfile[];
+  recentCreatedDropCoords: { lat: number; lng: number; dropId: string } | null;
   
   // Actions
+  syncWithServer: () => Promise<void>;
+  clearRecentCreatedDropCoords: () => void;
   setSelectedCity: (cityId: string) => void;
   setSelectedCategory: (cat: DropCategory | 'ALL') => void;
   toggleGirlsOnlyFilter: () => void;
@@ -113,6 +116,38 @@ export const useSideQuestStore = create<SideQuestStore>()(
       isShareModalOpen: false,
       selectedShareDrop: null,
       activeTab: 'radar',
+      recentCreatedDropCoords: null,
+
+      clearRecentCreatedDropCoords: () => set({ recentCreatedDropCoords: null }),
+
+      syncWithServer: async () => {
+        try {
+          const res = await fetch('/api/drops');
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.drops && Array.isArray(data.drops)) {
+            set(state => {
+              // Merge server drops: preserve any locally created ones not yet on server
+              const serverDropIds = new Set(data.drops.map((d: Drop) => d.id));
+              const localUnsynced = state.drops.filter(d => !serverDropIds.has(d.id));
+              const mergedDrops = [...localUnsynced, ...data.drops];
+
+              // Merge server dropChats
+              const mergedChats = {
+                ...state.dropChats,
+                ...(data.dropChats || {})
+              };
+
+              return {
+                drops: mergedDrops,
+                dropChats: mergedChats
+              };
+            });
+          }
+        } catch {
+          // Ignore network errors in offline/simulated scenarios
+        }
+      },
 
       setSelectedCity: (cityId: string) => {
         const city = METRO_CITIES.find(c => c.id === cityId);
@@ -386,6 +421,13 @@ export const useSideQuestStore = create<SideQuestStore>()(
             [dropId]: [...(state.dropChats[dropId] || []), newMsg]
           }
         }));
+
+        // Broadcast chat to backend
+        fetch('/api/drops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'chat', message: newMsg })
+        }).catch(() => {});
       },
 
       createDrop: (dropData) => {
@@ -423,6 +465,7 @@ export const useSideQuestStore = create<SideQuestStore>()(
           isHost: true
         };
 
+        // Reset any conflicting category/girls-only filters so the host's own radar immediately highlights the flare
         set(state => ({
           drops: [newDrop, ...state.drops],
           dropChats: {
@@ -430,9 +473,19 @@ export const useSideQuestStore = create<SideQuestStore>()(
             [dropId]: [initialHostMsg]
           },
           isCreateSheetOpen: false,
-          activeDropId: newDrop.id,
-          activeTab: 'radar'
+          activeDropId: null, // Keep map unobstructed so user can see their flare pulse on the radar
+          activeTab: 'radar',
+          selectedCategory: 'ALL',
+          isGirlsOnlyFilter: false,
+          recentCreatedDropCoords: { lat: newDrop.lat, lng: newDrop.lng, dropId: newDrop.id }
         }));
+
+        // Broadcast to shared backend API so all other devices see it live
+        fetch('/api/drops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'create', drop: newDrop })
+        }).catch(() => {});
 
         return newDrop;
       },
@@ -492,6 +545,13 @@ export const useSideQuestStore = create<SideQuestStore>()(
           }
         }));
 
+        // Broadcast join to backend
+        fetch('/api/drops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'join', dropId, user })
+        }).catch(() => {});
+
         return true;
       },
 
@@ -528,6 +588,13 @@ export const useSideQuestStore = create<SideQuestStore>()(
           },
           activeDropId: null
         }));
+
+        // Broadcast leave to backend
+        fetch('/api/drops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'leave', dropId, userId: user.id, userFullName: user.fullName })
+        }).catch(() => {});
       },
 
       checkInDrop: (dropId: string) => {
@@ -563,6 +630,13 @@ export const useSideQuestStore = create<SideQuestStore>()(
             questsCompleted: state.currentUser.questsCompleted + 1
           }
         }));
+
+        // Broadcast checkin to backend
+        fetch('/api/drops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'checkin', dropId, userId: user.id, userFullName: user.fullName })
+        }).catch(() => {});
       }
     }),
     {

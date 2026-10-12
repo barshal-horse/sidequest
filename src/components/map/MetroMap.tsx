@@ -31,7 +31,9 @@ export default function MetroMap() {
     setActiveDropId,
     userLocation,
     setUserLocation,
-    currentUser
+    currentUser,
+    recentCreatedDropCoords,
+    clearRecentCreatedDropCoords
   } = useSideQuestStore();
 
   // Initialize MapLibre GL 3D Vector Canvas (OpenFreeMap 100% Free, Zero Keys, Zero Watermarks)
@@ -151,6 +153,32 @@ export default function MetroMap() {
       essential: true
     });
   }, [selectedCity, mapReady, is3DMode]);
+
+  // Handle Newly Created Flare (Fly Camera & Focus Luminous Node)
+  useEffect(() => {
+    if (!mapRef.current || !mapReady || !recentCreatedDropCoords) return;
+
+    const { lat, lng } = recentCreatedDropCoords;
+    mapRef.current.flyTo({
+      center: [lng, lat],
+      zoom: 16.5,
+      pitch: 58,
+      bearing: -10,
+      speed: 1.3,
+      duration: 1200,
+      essential: true
+    });
+
+    setGpsToast(`⚡ Flare Ignited on Radar! Broadcasted to all devices.`);
+    setTimeout(() => setGpsToast(null), 4500);
+
+    // Clear coords trigger after camera flight
+    const timer = setTimeout(() => {
+      clearRecentCreatedDropCoords();
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [recentCreatedDropCoords, mapReady, clearRecentCreatedDropCoords]);
 
   // Render Dynamic User Position Beacon Marker
   useEffect(() => {
