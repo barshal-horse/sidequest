@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { useSideQuestStore } from '@/lib/store';
-import { Clock, MapPin, Users, Zap, Share2, Sparkles, Navigation, ArrowUpDown } from 'lucide-react';
-import { calculateDistanceInMeters, formatDistance } from '@/lib/geo';
+import { Clock, MapPin, Users, Zap, Share2, Sparkles, Navigation, ArrowUpDown, Compass } from 'lucide-react';
+import { calculateDistanceInMeters, formatDistance, getGoogleMapsUrl, formatWalkingTime } from '@/lib/geo';
 import { playRadarBlip } from '@/lib/audio';
 
 export default function QuestsFeed() {
@@ -16,7 +16,8 @@ export default function QuestsFeed() {
     openShareModal, 
     setCreateSheetOpen,
     userLocation,
-    setInspectedMember
+    setInspectedMember,
+    setLocationModalOpen
   } = useSideQuestStore();
 
   const [sortBy, setSortBy] = useState<'soon' | 'distance'>('soon');
@@ -36,7 +37,8 @@ export default function QuestsFeed() {
       return {
         ...drop,
         distanceMeters: dist,
-        formattedDistance: formatDistance(dist)
+        formattedDistance: formatDistance(dist),
+        walkingTime: formatWalkingTime(dist)
       };
     });
 
@@ -72,12 +74,18 @@ export default function QuestsFeed() {
 
       {/* Sorting & Proximity Telemetry Controls */}
       <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#141418] border border-[#24242B] text-xs font-mono">
-        <div className="flex items-center gap-1.5 text-[#8E8E9F]">
-          <Navigation className={`w-3.5 h-3.5 ${userLocation ? 'text-[#00F0FF]' : 'text-[#8E8E9F]'}`} />
-          <span className="text-[11px]">
-            {userLocation ? '📍 GPS Proximity: Live' : `Radar: ${selectedCity.name} Hotspots`}
+        <button
+          onClick={() => setLocationModalOpen(true)}
+          className="flex items-center gap-1.5 text-left group transition-colors"
+          title="Click to set your exact location or request live GPS"
+        >
+          <Navigation className={`w-3.5 h-3.5 ${userLocation ? 'text-[#00F0FF]' : 'text-[#CCFF00] animate-bounce'}`} />
+          <span className="text-[11px] text-[#F4F4F6] group-hover:text-[#00F0FF] underline-offset-2 hover:underline">
+            {userLocation 
+              ? `📍 ${userLocation.addressName || 'GPS Active'} (${userLocation.isLiveGps ? 'Live' : 'Pin'})` 
+              : '📍 Set Location / Live GPS →'}
           </span>
-        </div>
+        </button>
 
         <div className="flex items-center gap-1 bg-[#0E0E12] p-0.5 rounded-lg border border-[#24242B]">
           <button
@@ -103,6 +111,7 @@ export default function QuestsFeed() {
       <div className="space-y-3 pt-1">
         {sortedDrops.map(drop => {
           const isUrgent = (new Date(drop.expiresAt).getTime() - Date.now()) < 20 * 60 * 1000;
+          const mapsUrl = getGoogleMapsUrl(drop.lat, drop.lng, `${drop.venueName}, ${drop.hotspotName}`);
           
           return (
             <div
@@ -124,8 +133,8 @@ export default function QuestsFeed() {
                       <p className="text-xs font-mono text-[#8E8E9F] flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-[#CCFF00]" /> {drop.venueName}
                       </p>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 font-bold whitespace-nowrap">
-                        ⚡ {drop.formattedDistance}
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 font-bold whitespace-nowrap">
+                        ⚡ {drop.formattedDistance} ({drop.walkingTime})
                       </span>
                     </div>
                   </div>
@@ -171,6 +180,18 @@ export default function QuestsFeed() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-2 py-1 rounded bg-[#1B1B22] hover:bg-[#24242B] border border-[#24242B] hover:border-[#00F0FF] text-[11px] font-mono text-[#00F0FF] flex items-center gap-1 transition-all"
+                    title="Open Google Maps for walking directions"
+                  >
+                    <Compass className="w-3 h-3" />
+                    <span>Maps</span>
+                  </a>
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

@@ -4,10 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
   X, MapPin, Clock, Users, Sparkles, Send, Share2, 
-  CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Navigation
+  CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Navigation, Compass 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { calculateDistanceInMeters, formatDistance, CHECKIN_GEOFENCE_RADIUS_METERS } from '@/lib/geo';
+import { 
+  calculateDistanceInMeters, formatDistance, CHECKIN_GEOFENCE_RADIUS_METERS, 
+  getGoogleMapsUrl, formatWalkingTime 
+} from '@/lib/geo';
 import { DEMO_PROFILES } from '@/lib/constants';
 import { playRadarBlip, playCheckInChime } from '@/lib/audio';
 import { DropMember } from '@/types';
@@ -23,7 +26,9 @@ export default function DropModal() {
     checkInDrop, 
     openShareModal,
     selectedCity,
-    setInspectedMember
+    setInspectedMember,
+    userLocation,
+    setLocationCoords
   } = useSideQuestStore();
 
   const [messageText, setMessageText] = useState('');
@@ -233,6 +238,68 @@ export default function DropModal() {
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           
+          {/* Venue Location & Google Maps Navigation */}
+          {(() => {
+            const userLat = userLocation ? userLocation.lat : selectedCity.center[1];
+            const userLng = userLocation ? userLocation.lng : selectedCity.center[0];
+            const distanceMeters = calculateDistanceInMeters(userLat, userLng, drop.lat, drop.lng);
+            const formattedDist = formatDistance(distanceMeters);
+            const walkTime = formatWalkingTime(distanceMeters);
+            const mapsUrl = getGoogleMapsUrl(drop.lat, drop.lng, `${drop.venueName}, ${drop.hotspotName}`);
+
+            return (
+              <div className="p-3.5 rounded-xl bg-[#141418] border border-[#24242B] space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5 font-bold">
+                    <MapPin className="w-3.5 h-3.5 text-[#CCFF00]" /> VENUE RADAR // {drop.hotspotName}
+                  </span>
+                  <span className="text-[11px] font-bold text-[#00F0FF] flex items-center gap-1">
+                    ⚡ {formattedDist} ({walkTime})
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-0.5">
+                  <div className="text-xs text-[#F4F4F6] font-mono leading-tight">
+                    <span className="font-bold text-[#CCFF00]">{drop.venueName}</span>
+                    <span className="text-[10px] text-[#8E8E9F] block mt-0.5">
+                      GPS: {drop.lat.toFixed(4)}° N, {drop.lng.toFixed(4)}° E
+                    </span>
+                  </div>
+
+                  {/* 1-Tap Google Maps Directions Link */}
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-[#00F0FF]/15 hover:bg-[#00F0FF]/25 border border-[#00F0FF]/40 text-[#00F0FF] hover:text-white font-mono text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+                    title="Open exact venue in Google Maps"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>🗺️ Open in Maps</span>
+                  </a>
+                </div>
+
+                {/* Quick Pin Set */}
+                <div className="pt-2 border-t border-[#24242B] flex items-center justify-between text-[10px] font-mono">
+                  <span className="text-[#8E8E9F]">
+                    {userLocation ? (userLocation.isLiveGps ? '📍 Live GPS Active' : `📍 Pin: ${userLocation.addressName || 'Custom'}`) : '📍 Location not set yet'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocationCoords(drop.lat, drop.lng, `At ${drop.venueName.split(' ')[0]}`, false);
+                      playRadarBlip();
+                    }}
+                    className="text-[#CCFF00] hover:underline flex items-center gap-1 font-bold"
+                    title="Simulate placing your position directly at this venue"
+                  >
+                    <span>📍 Set Pin Here (Test Check-In)</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Party Squad Slots */}
           <div className="p-3.5 rounded-xl bg-[#141418] border border-[#24242B]">
             <div className="flex items-center justify-between mb-2.5">

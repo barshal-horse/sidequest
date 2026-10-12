@@ -20,6 +20,8 @@ export interface MetroCity {
 export interface UserLocation {
   lat: number;
   lng: number;
+  addressName?: string;
+  isLiveGps?: boolean;
 }
 
 export interface UserProfile {
@@ -38,6 +40,7 @@ export interface UserProfile {
   audioAura?: string;
   badges?: string[];
   bioManifesto?: string;
+  isProfileCustomized?: boolean;
 }
 
 export interface DropMember {

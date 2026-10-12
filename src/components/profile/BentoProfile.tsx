@@ -17,7 +17,8 @@ export default function BentoProfile() {
     setAuthModalOpen, 
     switchProfile,
     resetToNewIndividual,
-    selectedCity
+    selectedCity,
+    setInspectedMember
   } = useSideQuestStore();
   const [copied, setCopied] = useState(false);
 
@@ -46,74 +47,68 @@ export default function BentoProfile() {
     switchProfile(profile);
   };
 
+  const handleInspect = (profile: typeof DEMO_PROFILES[0]) => {
+    playRadarBlip();
+    setInspectedMember(profile);
+  };
+
   return (
     <div className="w-full max-w-lg mx-auto p-4 sm:p-5 space-y-4 pb-24 animate-fade-in">
       
-      {/* Persona & Identity Switcher Hub */}
-      <div className="p-3.5 rounded-2xl bg-[#141418] border border-[#24242B] space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8E8E9F]">
-            <Users className="w-3.5 h-3.5 text-[#CCFF00]" />
-            <span>SWITCH IDENTITY / PERSONA</span>
+      {/* Unique Identity Status / Onboarding Callout */}
+      {!currentUser.isProfileCustomized ? (
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#CCFF00]/15 via-[#141418] to-[#00F0FF]/10 border border-[#CCFF00]/40 shadow-[0_0_24px_rgba(204,255,0,0.15)] space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#CCFF00] animate-ping" />
+              <span className="text-xs font-mono font-bold text-[#CCFF00] tracking-wider uppercase">
+                CLAIM YOUR UNIQUE IDENTITY
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-[#00F0FF] bg-[#00F0FF]/10 px-2 py-0.5 rounded-full border border-[#00F0FF]/30">
+              0 PASSWORDS NEEDED
+            </span>
           </div>
-          <span className="text-[10px] font-mono text-[#00F0FF] bg-[#00F0FF]/10 px-2 py-0.5 rounded-full border border-[#00F0FF]/30">
-            TEST SQUAD PERSPECTIVES
-          </span>
+
+          <p className="text-xs font-mono text-[#F4F4F6] leading-relaxed">
+            You are browsing with temporary handle <span className="text-[#CCFF00] font-bold">@{currentUser.handle}</span>. Set your unique moniker, avatar, and Spotify music taste so squad members recognize you at meetups!
+          </p>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              onClick={() => setAuthModalOpen(true, 'claim identity')}
+              className="py-2 px-3 rounded-xl bg-[#CCFF00] hover:bg-[#b8e600] text-[#0A0A0C] font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(204,255,0,0.3)] transition-all"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Set Up My Profile</span>
+            </button>
+
+            <button
+              onClick={handleRandomize}
+              className="py-2 px-3 rounded-xl bg-[#1B1B22] hover:bg-[#24242B] border border-[#24242B] hover:border-[#CCFF00] text-xs font-mono text-[#CCFF00] flex items-center justify-center gap-1.5 transition-colors"
+              title="Generate a cool random moniker and music taste"
+            >
+              <Dices className="w-4 h-4" />
+              <span>🎲 Roll Random</span>
+            </button>
+          </div>
         </div>
-
-        {/* Horizontal Persona Avatars */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-          {DEMO_PROFILES.map((profile) => {
-            const isCurrent = currentUser.id === profile.id;
-            return (
-              <button
-                key={profile.id}
-                onClick={() => handleSwitch(profile)}
-                className={`flex-shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-left transition-all ${
-                  isCurrent 
-                    ? 'bg-[#CCFF00]/15 border-[#CCFF00] shadow-[0_0_12px_rgba(204,255,0,0.3)]' 
-                    : 'bg-[#1B1B22] border-[#24242B] hover:border-[#CCFF00]/60 opacity-70 hover:opacity-100'
-                }`}
-              >
-                <img 
-                  src={profile.avatarUrl} 
-                  alt={profile.handle} 
-                  className={`w-6 h-6 rounded-full object-cover border ${isCurrent ? 'border-[#CCFF00]' : 'border-transparent'}`} 
-                />
-                <div className="flex flex-col pr-1">
-                  <span className={`text-[11px] font-mono font-bold leading-none ${isCurrent ? 'text-[#CCFF00]' : 'text-[#F4F4F6]'}`}>
-                    @{profile.handle.split('.')[0]}
-                  </span>
-                  <span className="text-[9px] font-mono text-[#8E8E9F] mt-0.5">
-                    {profile.city}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Quick Action Buttons for New Personas */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
+      ) : (
+        <div className="p-3 rounded-xl bg-[#141418] border border-[#24242B] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#CCFF00]" />
+            <span className="text-[11px] font-mono text-[#8E8E9F]">
+              YOUR UNIQUE IDENTITY: <span className="text-[#CCFF00] font-bold">@{currentUser.handle}</span>
+            </span>
+          </div>
           <button
-            onClick={handleRandomize}
-            className="py-1.5 px-3 rounded-lg bg-[#1B1B22] hover:bg-[#24242B] border border-[#24242B] text-xs font-mono text-[#F4F4F6] hover:text-[#CCFF00] flex items-center justify-center gap-1.5 transition-colors"
-            title="Roll random handle, avatar, and vibe"
+            onClick={() => setAuthModalOpen(true, 'edit identity')}
+            className="text-[11px] font-mono text-[#00F0FF] hover:underline flex items-center gap-1"
           >
-            <Dices className="w-3.5 h-3.5 text-[#CCFF00]" />
-            <span>🎲 Randomize New</span>
-          </button>
-
-          <button
-            onClick={() => setAuthModalOpen(true, 'create new custom persona')}
-            className="py-1.5 px-3 rounded-lg bg-[#CCFF00]/10 hover:bg-[#CCFF00]/20 border border-[#CCFF00]/40 text-xs font-mono text-[#CCFF00] flex items-center justify-center gap-1.5 transition-colors"
-            title="Create your own custom name, handle & avatar"
-          >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>+ Create Custom</span>
+            <Sparkles className="w-3 h-3" /> Edit Profile
           </button>
         </div>
-      </div>
+      )}
 
       {/* Top Profile Header */}
       <div className="p-4 rounded-2xl bg-[#141418] border border-[#24242B] flex items-center justify-between">
@@ -271,6 +266,48 @@ export default function BentoProfile() {
             {copied ? <Check className="w-3.5 h-3.5 text-[#CCFF00]" /> : <Share2 className="w-3.5 h-3.5" />}
             {copied ? 'Copied!' : 'Share Bento'}
           </button>
+        </div>
+      </div>
+
+      {/* Squad Members Directory (Read-Only Taste Graph Inspection) */}
+      <div className="p-3.5 rounded-2xl bg-[#141418] border border-[#24242B] space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8E8E9F]">
+            <Users className="w-3.5 h-3.5 text-[#00F0FF]" />
+            <span>DISCOVER OTHER SQUAD EXPLORERS</span>
+          </div>
+          <span className="text-[10px] font-mono text-[#00F0FF] bg-[#00F0FF]/10 px-2 py-0.5 rounded-full border border-[#00F0FF]/30">
+            READ-ONLY TASTE GRAPH
+          </span>
+        </div>
+
+        <p className="text-[11px] font-mono text-[#8E8E9F] leading-relaxed">
+          Tap any squad member to inspect their Spotify audio aura, karma badge, and vibe compatibility:
+        </p>
+
+        {/* Squad Members Horizontal Scroll */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          {DEMO_PROFILES.map((profile) => (
+            <button
+              key={profile.id}
+              onClick={() => handleInspect(profile)}
+              className="flex-shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-[#24242B] bg-[#1B1B22] hover:border-[#00F0FF] text-left transition-all hover:scale-105"
+            >
+              <img 
+                src={profile.avatarUrl} 
+                alt={profile.handle} 
+                className="w-7 h-7 rounded-full object-cover border border-[#00F0FF]/40" 
+              />
+              <div className="flex flex-col pr-1">
+                <span className="text-[11px] font-mono font-bold text-[#F4F4F6] leading-none">
+                  @{profile.handle.split('.')[0]}
+                </span>
+                <span className="text-[9px] font-mono text-[#8E8E9F] mt-0.5">
+                  {profile.city} • {profile.karmaScore}★
+                </span>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 

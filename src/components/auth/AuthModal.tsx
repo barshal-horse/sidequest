@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -23,6 +23,7 @@ export default function AuthModal() {
   const { 
     isAuthModalOpen, 
     setAuthModalOpen, 
+    authModalReason,
     currentUser, 
     updateProfile, 
     loginUser,
@@ -38,6 +39,22 @@ export default function AuthModal() {
   const [currentSong, setCurrentSong] = useState(currentUser.currentRotation || 'Fred again.. - adore u');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
+
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      if (authModalReason?.includes('create') || !currentUser.isProfileCustomized) {
+        setMode('create');
+      } else {
+        setMode('edit');
+      }
+      setHandle(currentUser.handle || 'pilot');
+      setFullName(currentUser.fullName || 'Explorer');
+      setGender(currentUser.gender || 'M');
+      setSelectedAvatar(currentUser.avatarUrl || AVATAR_OPTIONS[0]);
+      setBio(currentUser.bioManifesto || 'Late night chai runs and building cool things.');
+      setCurrentSong(currentUser.currentRotation || 'Fred again.. - adore u');
+    }
+  }, [isAuthModalOpen, authModalReason, currentUser]);
 
   if (!isAuthModalOpen) return null;
 

@@ -11,8 +11,9 @@ import CreateDropSheet from '@/components/drops/CreateDropSheet';
 import ShareModal from '@/components/drops/ShareModal';
 import AuthModal from '@/components/auth/AuthModal';
 import MemberProfileModal from '@/components/profile/MemberProfileModal';
+import LocationPickerModal from '@/components/map/LocationPickerModal';
 import { 
-  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX 
+  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX, Navigation, MapPin 
 } from 'lucide-react';
 import { playGlideWhoosh, playRadarBlip } from '@/lib/audio';
 
@@ -40,7 +41,9 @@ export default function Home() {
     setCreateSheetOpen,
     drops,
     soundEnabled,
-    toggleSound
+    toggleSound,
+    userLocation,
+    setLocationModalOpen
   } = useSideQuestStore();
 
   const cityDropsCount = drops.filter(d => d.cityId === selectedCity.id).length;
@@ -174,6 +177,35 @@ export default function Home() {
             🌸 Girls Only
           </button>
         </div>
+
+        {/* Live GPS Telemetry & Neighborhood Radar Bar */}
+        <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-[#1C1C24] text-[11px] font-mono">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${
+              userLocation 
+                ? (userLocation.isLiveGps ? 'bg-[#CCFF00] animate-ping' : 'bg-[#00F0FF]') 
+                : 'bg-[#FF0055] animate-pulse'
+            }`} />
+            <span className="text-[#8E8E9F] shrink-0 text-[10px]">RADAR PIN:</span>
+            <span className={`truncate text-xs font-bold ${userLocation ? 'text-[#F4F4F6]' : 'text-[#8E8E9F]'}`}>
+              {userLocation?.addressName || (userLocation ? `${userLocation.lat.toFixed(4)}°, ${userLocation.lng.toFixed(4)}°` : 'Using Metro Center')}
+            </span>
+            {userLocation?.isLiveGps && (
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#CCFF00]/15 text-[#CCFF00] border border-[#CCFF00]/30 font-bold shrink-0">
+                LIVE GPS
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={() => setLocationModalOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#1B1B22] hover:bg-[#24242B] border border-[#24242B] hover:border-[#CCFF00] text-xs font-mono text-[#CCFF00] transition-colors shrink-0 ml-2"
+            title="Set exact location or request browser GPS"
+          >
+            <Navigation className="w-3 h-3" />
+            <span>{userLocation ? 'Change Pin' : '📡 Enable GPS'}</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -242,6 +274,7 @@ export default function Home() {
       <ShareModal />
       <AuthModal />
       <MemberProfileModal />
+      <LocationPickerModal />
     </main>
   );
 }

@@ -56,3 +56,23 @@ export function findClosestMetro<T extends MetroCityCoord>(
   return { city: closest, distanceMeters: minDistance };
 }
 
+// Generate Google Maps navigation URL for directions
+export function getGoogleMapsUrl(lat: number, lng: number, venueName?: string): string {
+  if (venueName) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(venueName)}&destination_place_id=&destination_coordinates=${lat},${lng}`;
+  }
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
+
+// Format approximate walking/travel time based on distance
+export function formatWalkingTime(meters: number): string {
+  if (meters <= 80) return 'At venue (<1 min)';
+  const walkMins = Math.round(meters / 80); // average ~80m/min
+  if (walkMins <= 45) {
+    return `~${walkMins} min walk`;
+  }
+  const driveMins = Math.max(5, Math.round(meters / 350));
+  return `~${driveMins} min ride`;
+}
+
+

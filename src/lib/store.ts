@@ -4,22 +4,23 @@ import { Drop, MetroCity, DropCategory, UserProfile, UserLocation } from '@/type
 import { METRO_CITIES, INITIAL_DROPS, generateRandomPersona } from './constants';
 import { toggleMuteSound } from './audio';
 
-const DEFAULT_USER: UserProfile = {
-  id: 'user-harshal',
-  handle: 'harshal.b',
-  fullName: 'Harshal Borse',
-  avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+const DEFAULT_NEW_EXPLORER: UserProfile = {
+  id: 'user-pilot',
+  handle: 'radar.explorer',
+  fullName: 'New Explorer',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
   city: 'Bengaluru',
   karmaScore: 100,
-  questsCompleted: 28,
+  questsCompleted: 0,
   flakeRate: 0,
   isVerified: true,
-  gender: 'M',
-  spotifyTopArtists: ['Fred again..', 'The Weeknd', 'Karan Aujla', 'Cigarettes After Sex'],
+  gender: 'OTHER',
+  spotifyTopArtists: ['Fred again..', 'The Local Train'],
   currentRotation: 'Fred again.. - adore u',
-  audioAura: 'Late-Night Lo-Fi / Electronic',
-  badges: ['🔥 Night Owl 15x', '⚡ Quest Host LVL 3', '🏸 Badminton Ace', '☕ Chai Connoisseur'],
-  bioManifesto: 'Proof of work > CGPA. Catch me at Gate 2 or building autonomous trading engines.'
+  audioAura: 'Indie / Electronic Chill',
+  badges: ['⚡ New Explorer', '🔥 100% Show-Up'],
+  bioManifesto: 'Spontaneous sidequest explorer. Tap "Edit Profile" to claim your unique identity!',
+  isProfileCustomized: false
 };
 
 interface SideQuestStore {
@@ -34,6 +35,7 @@ interface SideQuestStore {
   isAuthenticated: boolean;
   isAuthModalOpen: boolean;
   authModalReason: string | null;
+  isLocationModalOpen: boolean;
   activeDropId: string | null;
   isCreateSheetOpen: boolean;
   isShareModalOpen: boolean;
@@ -46,6 +48,8 @@ interface SideQuestStore {
   toggleGirlsOnlyFilter: () => void;
   setActiveDropId: (id: string | null) => void;
   setUserLocation: (loc: UserLocation | null) => void;
+  setLocationModalOpen: (open: boolean) => void;
+  setLocationCoords: (lat: number, lng: number, addressName?: string, isLiveGps?: boolean) => void;
   setInspectedMember: (member: UserProfile | null) => void;
   toggleSound: () => boolean;
   setCreateSheetOpen: (open: boolean) => void;
@@ -72,13 +76,14 @@ export const useSideQuestStore = create<SideQuestStore>()(
       selectedCategory: 'ALL',
       isGirlsOnlyFilter: false,
       drops: INITIAL_DROPS,
-      currentUser: DEFAULT_USER,
+      currentUser: DEFAULT_NEW_EXPLORER,
       userLocation: null,
       inspectedMember: null,
       soundEnabled: true,
-      isAuthenticated: true, // Pre-authenticated with default explorer profile, can switch anytime
+      isAuthenticated: true,
       isAuthModalOpen: false,
       authModalReason: null,
+      isLocationModalOpen: false,
       activeDropId: null,
       isCreateSheetOpen: false,
       isShareModalOpen: false,
@@ -99,6 +104,19 @@ export const useSideQuestStore = create<SideQuestStore>()(
       setActiveDropId: (id) => set({ activeDropId: id }),
 
       setUserLocation: (loc) => set({ userLocation: loc }),
+
+      setLocationModalOpen: (open) => set({ isLocationModalOpen: open }),
+
+      setLocationCoords: (lat, lng, addressName, isLiveGps = false) => {
+        set({
+          userLocation: {
+            lat,
+            lng,
+            addressName: addressName || `${lat.toFixed(4)}°, ${lng.toFixed(4)}°`,
+            isLiveGps
+          }
+        });
+      },
 
       setInspectedMember: (member) => set({ inspectedMember: member }),
 
@@ -135,7 +153,10 @@ export const useSideQuestStore = create<SideQuestStore>()(
         const city = get().selectedCity.name;
         const fresh = generateRandomPersona(city);
         set({
-          currentUser: fresh,
+          currentUser: {
+            ...fresh,
+            isProfileCustomized: true
+          },
           isAuthenticated: true
         });
       },
@@ -148,7 +169,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
           ...userData,
           id,
           handle,
-          isVerified: true
+          isVerified: true,
+          isProfileCustomized: true
         };
         set({
           currentUser: newUser,
@@ -161,11 +183,12 @@ export const useSideQuestStore = create<SideQuestStore>()(
         set({
           isAuthenticated: false,
           currentUser: {
-            ...DEFAULT_USER,
+            ...DEFAULT_NEW_EXPLORER,
             id: 'guest',
             handle: 'anonymous',
             fullName: 'Guest Explorer',
-            isVerified: false
+            isVerified: false,
+            isProfileCustomized: false
           }
         });
       },
@@ -174,7 +197,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
         set(state => ({
           currentUser: {
             ...state.currentUser,
-            ...data
+            ...data,
+            isProfileCustomized: true
           }
         }));
       },
@@ -296,7 +320,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
         currentUser: state.currentUser,
         isAuthenticated: state.isAuthenticated,
         selectedCity: state.selectedCity,
-        soundEnabled: state.soundEnabled
+        soundEnabled: state.soundEnabled,
+        userLocation: state.userLocation
       })
     }
   )
