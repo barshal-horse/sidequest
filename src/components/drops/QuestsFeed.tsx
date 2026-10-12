@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { useSideQuestStore } from '@/lib/store';
-import { Clock, MapPin, Users, Zap, Share2, Sparkles, Navigation, ArrowUpDown, Compass } from 'lucide-react';
+import { Clock, MapPin, Users, Zap, Share2, Sparkles, Navigation, ArrowUpDown, Compass, Radio, Dices } from 'lucide-react';
 import { calculateDistanceInMeters, formatDistance, getGoogleMapsUrl, formatWalkingTime } from '@/lib/geo';
 import { playRadarBlip } from '@/lib/audio';
+import SideQuestRoulette from './SideQuestRoulette';
+import SonarRadarSweep from '../radar/SonarRadarSweep';
 
 export default function QuestsFeed() {
   const { 
@@ -21,6 +23,7 @@ export default function QuestsFeed() {
   } = useSideQuestStore();
 
   const [sortBy, setSortBy] = useState<'soon' | 'distance'>('soon');
+  const [isSonarOpen, setIsSonarOpen] = useState(false);
 
   // Compute distance for each drop
   const dropsWithDistance = drops
@@ -64,13 +67,30 @@ export default function QuestsFeed() {
           </p>
         </div>
 
-        <button
-          onClick={() => setCreateSheetOpen(true)}
-          className="px-3 py-1.5 rounded-lg bg-[#CCFF00] text-[#0A0A0C] font-mono font-bold text-xs hover:bg-[#b8e600] transition-colors flex items-center gap-1 shadow-[0_0_12px_rgba(204,255,0,0.3)]"
-        >
-          <Zap className="w-3.5 h-3.5 fill-current" /> + Drop Flare
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              playRadarBlip();
+              setIsSonarOpen(true);
+            }}
+            className="px-2.5 py-1.5 rounded-lg bg-[#00F0FF]/15 border border-[#00F0FF]/40 text-[#00F0FF] font-mono font-bold text-xs hover:bg-[#00F0FF]/25 transition-all flex items-center gap-1 shadow-sm"
+            title="Scan 2.0km acoustic radar for nearby active explorers"
+          >
+            <Radio className="w-3.5 h-3.5 animate-pulse" />
+            <span>📡 Sonar</span>
+          </button>
+
+          <button
+            onClick={() => setCreateSheetOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-[#CCFF00] text-[#0A0A0C] font-mono font-bold text-xs hover:bg-[#b8e600] transition-colors flex items-center gap-1 shadow-[0_0_12px_rgba(204,255,0,0.3)]"
+          >
+            <Zap className="w-3.5 h-3.5 fill-current" /> + Drop Flare
+          </button>
+        </div>
       </div>
+
+      {/* Spontaneous SideQuest Micro-Quest Roulette */}
+      <SideQuestRoulette />
 
       {/* Sorting & Proximity Telemetry Controls */}
       <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#141418] border border-[#24242B] text-xs font-mono">
@@ -225,6 +245,9 @@ export default function QuestsFeed() {
           </div>
         )}
       </div>
+
+      {/* Sonar Radar Acoustic Sweep HUD Modal */}
+      <SonarRadarSweep isOpen={isSonarOpen} onClose={() => setIsSonarOpen(false)} />
 
     </div>
   );

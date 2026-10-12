@@ -6,6 +6,7 @@ import { Crosshair, Plus, Minus, Radio, Compass, Layers, Navigation, Sparkles } 
 import { METRO_CITIES } from '@/lib/constants';
 import { findClosestMetro } from '@/lib/geo';
 import { playRadarBlip, playGlideWhoosh } from '@/lib/audio';
+import SonarRadarSweep from '../radar/SonarRadarSweep';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 export default function MetroMap() {
@@ -18,6 +19,7 @@ export default function MetroMap() {
   const [is3DMode, setIs3DMode] = useState(true);
   const [isLocating, setIsLocating] = useState(false);
   const [gpsToast, setGpsToast] = useState<string | null>(null);
+  const [isSonarOpen, setIsSonarOpen] = useState(false);
 
   const {
     selectedCity,
@@ -449,6 +451,17 @@ export default function MetroMap() {
       {/* Floating HUD Controls (Right Side) */}
       <div className="absolute right-4 bottom-20 z-20 flex flex-col gap-1.5">
         <button
+          onClick={() => {
+            playRadarBlip();
+            setIsSonarOpen(true);
+          }}
+          className="w-9 h-9 rounded-lg bg-[#00F0FF]/20 border border-[#00F0FF] text-[#00F0FF] hover:bg-[#00F0FF]/30 backdrop-blur-md flex items-center justify-center transition-all shadow-[0_0_14px_rgba(0,240,255,0.4)]"
+          title="2.0km Sonar Radar Acoustic Sweep"
+        >
+          <Radio className="w-4 h-4 animate-pulse" />
+        </button>
+
+        <button
           onClick={handleLocateMe}
           disabled={isLocating}
           className={`w-9 h-9 rounded-lg backdrop-blur-md border flex items-center justify-center transition-all shadow-lg ${
@@ -497,6 +510,9 @@ export default function MetroMap() {
           <Minus className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Sonar Radar Acoustic Sweep HUD Modal */}
+      <SonarRadarSweep isOpen={isSonarOpen} onClose={() => setIsSonarOpen(false)} />
 
     </div>
   );

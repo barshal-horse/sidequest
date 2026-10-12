@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playCameraShutter, playFilmEject, playCheckInChime, playRadarBlip } from '@/lib/audio';
+import { exportPolaroidStoryCard } from '@/lib/storyExport';
 
 const QUICK_FILM_PRESETS = [
   {
@@ -241,6 +242,21 @@ export default function InstantPolaroidCamModal() {
 
     // Close Modal
     setInstantCamOpen(false);
+  };
+
+  // 1-Tap 9:16 Instagram / WhatsApp Story Card Export
+  const handleExportStory = async () => {
+    if (!snappedPhotoUrl) return;
+    playRadarBlip();
+    await exportPolaroidStoryCard({
+      title: caption.trim() || 'Instant Polaroid Snap',
+      photoUrl: snappedPhotoUrl,
+      locationName: venueName.trim() || selectedCity.hotspots[0]?.name || selectedCity.name,
+      cityName: selectedCity.name,
+      squadMembers: [{ handle: currentUser.handle }],
+      caption: caption.trim() || 'Instant Polaroid snap preserved in SideQuest.',
+      vibeTag: vibeTag || '⚡ Spontaneous Sidequest'
+    });
   };
 
   return (
@@ -523,14 +539,26 @@ export default function InstantPolaroidCamModal() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={handleRetake}
-                className="py-2.5 px-3 rounded-xl bg-[#141418] hover:bg-[#1B1B22] border border-[#24242B] text-xs font-mono text-[#8E8E9F] flex items-center justify-center gap-1.5"
-              >
-                <RefreshCw className="w-3.5 h-3.5" /> Retake
-              </button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleRetake}
+                  className="py-2.5 px-3 rounded-xl bg-[#141418] hover:bg-[#1B1B22] border border-[#24242B] text-xs font-mono text-[#8E8E9F] flex items-center justify-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Retake
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportStory}
+                  disabled={isDeveloping}
+                  className="py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-[#FF007A] to-[#FF7A00] hover:opacity-90 text-white font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(255,0,122,0.3)] transition-all disabled:opacity-50"
+                  title="Export 9:16 Story Card for Instagram or WhatsApp"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> 📲 Story Export
+                </button>
+              </div>
 
               <button
                 type="button"
@@ -539,7 +567,7 @@ export default function InstantPolaroidCamModal() {
                 className="flex-1 py-2.5 px-4 rounded-xl bg-[#CCFF00] hover:bg-[#b8e600] text-[#0A0A0C] font-mono font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_18px_rgba(204,255,0,0.4)] transition-all disabled:opacity-50"
               >
                 <Sparkles className="w-4 h-4 fill-current text-[#0A0A0C]" />
-                <span>Save to Polaroid Scrapbook</span>
+                <span>Save to Scrapbook</span>
               </button>
             </div>
           </div>

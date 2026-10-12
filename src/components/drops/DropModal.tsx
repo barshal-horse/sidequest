@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
   X, MapPin, Clock, Users, Sparkles, Send, Share2, 
-  CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Navigation, Compass 
+  CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Navigation, Compass,
+  QrCode, ScanLine
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { 
@@ -14,6 +15,7 @@ import {
 import { DEMO_PROFILES } from '@/lib/constants';
 import { playRadarBlip, playCheckInChime } from '@/lib/audio';
 import { DropMember } from '@/types';
+import SquadQrModal from './SquadQrModal';
 
 export default function DropModal() {
   const { 
@@ -41,6 +43,7 @@ export default function DropModal() {
   const [distanceReadout, setDistanceReadout] = useState<number | null>(null);
   const [aiVibeText, setAiVibeText] = useState<string | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const drop = drops.find(d => d.id === activeDropId);
   const currentChat = (drop && dropChats ? dropChats[drop.id] : []) || [];
@@ -509,18 +512,54 @@ export default function DropModal() {
         <div className="p-4 border-t border-[#24242B] bg-[#141418] flex items-center gap-2">
           {isMember ? (
             isCheckedIn ? (
-              <div className="flex-1 py-2.5 rounded-lg bg-[#CCFF00]/10 border border-[#CCFF00] text-[#CCFF00] text-center font-mono font-bold text-xs flex items-center justify-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> You Are Checked In (+10 Karma)
+              <div className="flex-1 flex items-center gap-2">
+                <div className="flex-1 py-2.5 rounded-lg bg-[#CCFF00]/10 border border-[#CCFF00] text-[#CCFF00] text-center font-mono font-bold text-xs flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" /> You Are Checked In (+10 Karma)
+                </div>
+                {isHost && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playRadarBlip();
+                      setIsQrModalOpen(true);
+                    }}
+                    className="py-2.5 px-3 rounded-lg bg-[#00F0FF]/15 border border-[#00F0FF]/50 text-[#00F0FF] font-mono font-bold text-xs flex items-center gap-1.5 hover:bg-[#00F0FF]/25 transition-all"
+                    title="Show squad check-in QR code pass"
+                  >
+                    <QrCode className="w-4 h-4" /> QR Pass
+                  </button>
+                )}
               </div>
             ) : (
               <div className="flex-1 flex items-center gap-2">
                 <button
                   onClick={handleGpsCheckIn}
                   disabled={isVerifyingGps}
-                  className="flex-1 py-2.5 rounded-lg bg-[#CCFF00] text-[#0A0A0C] font-mono font-bold text-xs hover:bg-[#b8e600] transition-colors flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(204,255,0,0.3)]"
+                  className="flex-1 py-2.5 rounded-lg bg-[#CCFF00] text-[#0A0A0C] font-mono font-bold text-xs hover:bg-[#b8e600] transition-colors flex items-center justify-center gap-1.5 shadow-[0_0_16px_rgba(204,255,0,0.3)]"
                 >
                   <Navigation className={`w-4 h-4 ${isVerifyingGps ? 'animate-spin' : ''}`} />
-                  {isVerifyingGps ? 'Verifying GPS...' : '📍 Verify GPS (+10 Karma)'}
+                  {isVerifyingGps ? 'Verifying...' : '📍 GPS Check-In'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playRadarBlip();
+                    setIsQrModalOpen(true);
+                  }}
+                  className="py-2.5 px-3 rounded-lg bg-[#00F0FF]/15 border border-[#00F0FF]/50 text-[#00F0FF] hover:text-white hover:bg-[#00F0FF]/30 font-mono font-bold text-xs flex items-center gap-1.5 transition-all"
+                  title={isHost ? 'Display QR Pass for squad' : 'Scan Host QR Code'}
+                >
+                  {isHost ? (
+                    <>
+                      <QrCode className="w-4 h-4" />
+                      <span>Host QR</span>
+                    </>
+                  ) : (
+                    <>
+                      <ScanLine className="w-4 h-4" />
+                      <span>Scan QR</span>
+                    </>
+                  )}
                 </button>
                 {!isHost && (
                   <button
@@ -531,7 +570,7 @@ export default function DropModal() {
                     className="py-2.5 px-3 rounded-lg bg-[#1B1B22] hover:bg-[#FF0055]/20 border border-[#24242B] hover:border-[#FF0055] text-xs font-mono text-[#8E8E9F] hover:text-[#FF0055] transition-colors whitespace-nowrap"
                     title="Leave squad lobby and free your slot"
                   >
-                    Leave Squad
+                    Leave
                   </button>
                 )}
               </div>
@@ -554,6 +593,15 @@ export default function DropModal() {
             <Share2 className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Squad QR Check-in Pass / Scanner Modal */}
+        <SquadQrModal
+          drop={drop}
+          isHost={isHost}
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          onVerifyCheckIn={triggerSuccessfulCheckIn}
+        />
 
       </div>
     </div>

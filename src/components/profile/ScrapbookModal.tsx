@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playCheckInChime, playRadarBlip } from '@/lib/audio';
+import { exportPolaroidStoryCard } from '@/lib/storyExport';
 
 const PHOTO_PRESETS = [
   {
@@ -52,6 +53,23 @@ export default function ScrapbookModal() {
   const [activeTab, setActiveTab] = useState<'gallery' | 'add'>('gallery');
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
+
+  const handleExportStory = async (memory: ScrapbookMemory, e: React.MouseEvent) => {
+    e.stopPropagation();
+    playRadarBlip();
+    setExportingId(memory.id);
+    await exportPolaroidStoryCard({
+      title: memory.title,
+      photoUrl: memory.photoUrl,
+      locationName: memory.locationName,
+      cityName: memory.cityName,
+      squadMembers: memory.squadMembers,
+      caption: memory.caption,
+      vibeTag: memory.vibeTag
+    });
+    setExportingId(null);
+  };
 
   // Add Memory Form State
   const [title, setTitle] = useState('');
@@ -307,13 +325,24 @@ export default function ScrapbookModal() {
                                   type="button"
                                   onClick={(e) => handleCopyShare(memory, e)}
                                   className="p-1.5 rounded-lg bg-[#F0F0F5] hover:bg-[#E5F9FF] text-[#0A0A0C] transition-colors"
-                                  title="Share memory"
+                                  title="Share memory link"
                                 >
                                   {copiedId === memory.id ? (
                                     <Check className="w-3.5 h-3.5 text-green-600" />
                                   ) : (
                                     <Share2 className="w-3.5 h-3.5" />
                                   )}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleExportStory(memory, e)}
+                                  disabled={exportingId === memory.id}
+                                  className="px-2 py-1 rounded-lg bg-[#0A0A0C] hover:bg-[#1E1E24] text-[#00F0FF] text-[10px] font-bold flex items-center gap-1 transition-colors"
+                                  title="Export 9:16 Story for Instagram or WhatsApp"
+                                >
+                                  <Sparkles className="w-3 h-3 text-[#FF007A]" />
+                                  <span>{exportingId === memory.id ? '...' : 'Story'}</span>
                                 </button>
 
                                 <button

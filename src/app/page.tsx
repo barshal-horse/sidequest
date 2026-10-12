@@ -15,8 +15,9 @@ import LocationPickerModal from '@/components/map/LocationPickerModal';
 import SpotifyConnectModal from '@/components/profile/SpotifyConnectModal';
 import ScrapbookModal from '@/components/profile/ScrapbookModal';
 import InstantPolaroidCamModal from '@/components/profile/InstantPolaroidCamModal';
+import SonarRadarSweep from '@/components/radar/SonarRadarSweep';
 import { 
-  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX, Navigation, MapPin, Camera 
+  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX, Navigation, MapPin, Camera, Radio 
 } from 'lucide-react';
 import { playGlideWhoosh, playRadarBlip } from '@/lib/audio';
 
@@ -49,6 +50,8 @@ export default function Home() {
     setLocationModalOpen,
     setInstantCamOpen
   } = useSideQuestStore();
+
+  const [isGlobalSonarOpen, setIsGlobalSonarOpen] = React.useState(false);
 
   const cityDropsCount = drops.filter(d => d.cityId === selectedCity.id).length;
 
@@ -124,8 +127,20 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Header Area: Audio Synth Toggle, Instant Snap Cam & Telemetry Pill */}
+          {/* Right Header Area: Audio Synth Toggle, Instant Snap Cam, Sonar Sweep & Telemetry Pill */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                playRadarBlip();
+                setIsGlobalSonarOpen(true);
+              }}
+              className="py-1 px-2.5 rounded-full border border-[#CCFF00]/40 bg-[#CCFF00]/15 text-[#CCFF00] hover:bg-[#CCFF00]/25 font-mono text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-[0_0_10px_rgba(204,255,0,0.2)] hover:scale-105"
+              title="2.0km Sonar Radar Acoustic Sweep"
+            >
+              <Radio className="w-3.5 h-3.5 animate-pulse" />
+              <span>Sonar</span>
+            </button>
+
             <button
               onClick={() => {
                 playRadarBlip();
@@ -327,6 +342,7 @@ export default function Home() {
       <SpotifyConnectModal />
       <ScrapbookModal />
       <InstantPolaroidCamModal />
+      <SonarRadarSweep isOpen={isGlobalSonarOpen} onClose={() => setIsGlobalSonarOpen(false)} />
     </main>
   );
 }
