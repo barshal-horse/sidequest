@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { 
-  X, Zap, Sparkles, Check, ArrowRight, User, Music, ShieldCheck, Cloud, Dices, UserPlus 
+  X, Zap, Sparkles, Check, ArrowRight, User, Music, ShieldCheck, Cloud, Dices, UserPlus, Radio, Tag, Plus 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { generateRandomPersona } from '@/lib/constants';
+import { generateRandomPersona, GEN_Z_VIBE_TAGS, LIVE_STATUS_OPTIONS } from '@/lib/constants';
 import { playCheckInChime, playRadarBlip } from '@/lib/audio';
 
 const AVATAR_OPTIONS = [
@@ -37,6 +37,15 @@ export default function AuthModal() {
   const [selectedAvatar, setSelectedAvatar] = useState(currentUser.avatarUrl || AVATAR_OPTIONS[0]);
   const [bio, setBio] = useState(currentUser.bioManifesto || 'Late night chai runs and building cool things.');
   const [currentSong, setCurrentSong] = useState(currentUser.currentRotation || 'Fred again.. - adore u');
+  const [vibeTags, setVibeTags] = useState<string[]>(
+    currentUser.vibeTags && currentUser.vibeTags.length > 0 
+      ? currentUser.vibeTags 
+      : ['🧋 3am Chai Runs', '📸 35mm Film Photography', '🎧 UK Garage / Lo-Fi']
+  );
+  const [liveStatus, setLiveStatus] = useState<string>(
+    currentUser.liveStatus || LIVE_STATUS_OPTIONS[0]
+  );
+  const [customTagInput, setCustomTagInput] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
 
@@ -53,6 +62,12 @@ export default function AuthModal() {
       setSelectedAvatar(currentUser.avatarUrl || AVATAR_OPTIONS[0]);
       setBio(currentUser.bioManifesto || 'Late night chai runs and building cool things.');
       setCurrentSong(currentUser.currentRotation || 'Fred again.. - adore u');
+      setVibeTags(
+        currentUser.vibeTags && currentUser.vibeTags.length > 0 
+          ? currentUser.vibeTags 
+          : ['🧋 3am Chai Runs', '📸 35mm Film Photography', '🎧 UK Garage / Lo-Fi']
+      );
+      setLiveStatus(currentUser.liveStatus || LIVE_STATUS_OPTIONS[0]);
     }
   }, [isAuthModalOpen, authModalReason, currentUser]);
 
@@ -67,6 +82,18 @@ export default function AuthModal() {
     setBio(persona.bioManifesto || '');
     setCurrentSong(persona.currentRotation || '');
     setGender(persona.gender || 'M');
+    if (persona.vibeTags) setVibeTags(persona.vibeTags);
+    if (persona.liveStatus) setLiveStatus(persona.liveStatus);
+  };
+
+  const toggleVibeTag = (tag: string) => {
+    if (vibeTags.includes(tag)) {
+      setVibeTags(vibeTags.filter(t => t !== tag));
+    } else {
+      if (vibeTags.length < 6) {
+        setVibeTags([...vibeTags, tag]);
+      }
+    }
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -82,6 +109,8 @@ export default function AuthModal() {
         gender,
         bioManifesto: bio,
         currentRotation: currentSong,
+        vibeTags,
+        liveStatus,
         city: selectedCity.name,
         karmaScore: 100,
         questsCompleted: 0,
@@ -101,6 +130,8 @@ export default function AuthModal() {
         gender,
         bioManifesto: bio,
         currentRotation: currentSong,
+        vibeTags,
+        liveStatus,
         city: selectedCity.name
       });
       playRadarBlip();
@@ -263,6 +294,103 @@ export default function AuthModal() {
               onChange={e => setCurrentSong(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-[#141418] border border-[#24242B] focus:border-[#CCFF00] text-xs text-[#F4F4F6] font-mono outline-none"
             />
+          </div>
+
+          {/* Bio / IRL Manifesto */}
+          <div>
+            <label className="block text-[11px] font-mono text-[#8E8E9F] mb-1">
+              BIO MANIFESTO & IRL LORE
+            </label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Late night chai enthusiast, building weird apps, down for spontaneous badminton"
+              value={bio}
+              onChange={e => setBio(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-[#141418] border border-[#24242B] focus:border-[#CCFF00] text-xs text-[#F4F4F6] font-mono outline-none resize-none"
+            />
+          </div>
+
+          {/* Live IRL Status Dropdown */}
+          <div>
+            <label className="block text-[11px] font-mono text-[#8E8E9F] mb-1.5 flex items-center gap-1">
+              <Radio className="w-3 h-3 text-[#CCFF00]" /> CURRENT IRL AVAILABILITY
+            </label>
+            <select
+              value={liveStatus}
+              onChange={e => setLiveStatus(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-[#141418] border border-[#24242B] focus:border-[#CCFF00] text-xs text-[#CCFF00] font-mono outline-none cursor-pointer"
+            >
+              {LIVE_STATUS_OPTIONS.map(opt => (
+                <option key={opt} value={opt} className="bg-[#141418] text-[#F4F4F6] font-mono">
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Hyperfixations & Vibe Tags */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[11px] font-mono text-[#8E8E9F] flex items-center gap-1">
+                <Tag className="w-3 h-3 text-[#00F0FF]" /> HYPERFIXATIONS & VIBES ({vibeTags.length}/6)
+              </label>
+              <span className="text-[10px] font-mono text-[#8E8E9F]">Tap to toggle</span>
+            </div>
+
+            {/* Quick chips */}
+            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 rounded-xl bg-[#141418] border border-[#24242B]">
+              {GEN_Z_VIBE_TAGS.map(tag => {
+                const isSelected = vibeTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleVibeTag(tag)}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-mono transition-all border ${
+                      isSelected
+                        ? 'bg-[#CCFF00] text-[#0A0A0C] font-bold border-[#CCFF00] shadow-[0_0_8px_rgba(204,255,0,0.3)]'
+                        : 'bg-[#1B1B22] text-[#8E8E9F] hover:text-[#F4F4F6] border-[#24242B]'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Add Custom Tag */}
+            <div className="flex items-center gap-1.5 mt-2">
+              <input
+                type="text"
+                placeholder="+ Add custom tag (e.g. 🛹 Skateboarding)"
+                value={customTagInput}
+                onChange={e => setCustomTagInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const trimmed = customTagInput.trim();
+                    if (trimmed && !vibeTags.includes(trimmed) && vibeTags.length < 6) {
+                      setVibeTags([...vibeTags, trimmed.startsWith('#') || trimmed.startsWith('✨') ? trimmed : `✨ ${trimmed}`]);
+                      setCustomTagInput('');
+                    }
+                  }
+                }}
+                className="flex-1 px-3 py-1.5 rounded-xl bg-[#141418] border border-[#24242B] focus:border-[#00F0FF] text-xs text-[#F4F4F6] font-mono outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const trimmed = customTagInput.trim();
+                  if (trimmed && !vibeTags.includes(trimmed) && vibeTags.length < 6) {
+                    setVibeTags([...vibeTags, trimmed.startsWith('#') || trimmed.startsWith('✨') ? trimmed : `✨ ${trimmed}`]);
+                    setCustomTagInput('');
+                  }
+                }}
+                className="px-3 py-1.5 rounded-xl bg-[#1B1B22] hover:bg-[#24242B] border border-[#24242B] hover:border-[#00F0FF] text-xs font-mono text-[#00F0FF] transition-colors"
+              >
+                + Add
+              </button>
+            </div>
           </div>
 
           {/* Gender Selector (for Girls-Only Safety Gate) */}

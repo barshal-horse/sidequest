@@ -675,6 +675,31 @@ export const INITIAL_DROP_CHATS: Record<string, ChatMessage[]> = {
   ]
 };
 
+export const GEN_Z_VIBE_TAGS = [
+  '🧋 3am Chai Runs',
+  '🎧 UK Garage / Lo-Fi',
+  '🎾 Turf Badminton 2v2',
+  '📸 35mm Film Photography',
+  '🍵 Iced Matcha Lattes',
+  '💻 Vibe Coding & Shippers',
+  '🧥 Vintage & Thrifting',
+  '🚲 Midnight Cycling',
+  '📚 Indie Book Swaps',
+  '🌊 Sunset Sea Walks',
+  '⚡ High-Entropy Meetups',
+  '🍕 Late-Night Slices',
+  '🎬 A24 & Letterboxd Lore'
+];
+
+export const LIVE_STATUS_OPTIONS = [
+  'Down for Chai right now 🧋',
+  'Seeking 4th for Badminton 🏸',
+  'Late-Night Lo-Fi Coding 💻',
+  'Sunset Promenade Walk 🌊',
+  'Hunting Specialty Coffee ☕',
+  'Roaming & Sidequesting ⚡'
+];
+
 export const DEMO_PROFILES: UserProfile[] = [
   {
     id: 'user-harshal',
@@ -691,7 +716,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'Fred again.. - adore u',
     audioAura: 'Late-Night Lo-Fi / Electronic',
     badges: ['🔥 Night Owl 15x', '⚡ Quest Host LVL 3', '🏸 Badminton Ace', '☕ Chai Connoisseur'],
-    bioManifesto: 'Proof of work > CGPA. Catch me at Gate 2 or building autonomous trading engines.'
+    bioManifesto: 'Proof of work > CGPA. Catch me at Gate 2 or building autonomous trading engines.',
+    vibeTags: ['☕ Specialty Pour-Overs', '🎧 Fred again..', '💻 AI Side Projects', '🌙 Late Night Koramangala'],
+    liveStatus: 'Coding at 12th Main Rooftop 💻'
   },
   {
     id: 'user-sneha',
@@ -708,7 +735,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'Laufey - From The Start',
     audioAura: 'Matcha Jazz / Acoustic Sunset',
     badges: ['🌸 Girls-Only Host', '🎨 Figma Wizard', '🧋 Boba Scout'],
-    bioManifesto: 'Crafting minimalist interfaces by day, hunting rooftop cafes by night.'
+    bioManifesto: 'Crafting minimalist interfaces by day, hunting rooftop cafes by night.',
+    vibeTags: ['🎨 UI / Interaction Design', '🧋 Adrak Bun Maska', '🎾 Badminton Singles', '📚 Indie Zines'],
+    liveStatus: 'Down for Chai & Design talk 🧋'
   },
   {
     id: 'user-aarav',
@@ -725,7 +754,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'Overmono - Good Lies',
     audioAura: 'High-Tempo UK Garage / Coffee',
     badges: ['🔥 Night Owl 15x', '🏸 Badminton Ace', '⚡ Quest Host LVL 2'],
-    bioManifesto: 'Late night commits and 2v2 turf matches in Koramangala.'
+    bioManifesto: 'Late night commits and 2v2 turf matches in Koramangala.',
+    vibeTags: ['🧋 Midnight Tea Lore', '🎹 Analog Synthesizers', '🚲 Night Cycling', '⚡ Hardware Hacking'],
+    liveStatus: 'Chilling at Sanjay tea stall 🧋'
   },
   {
     id: 'user-tanvi',
@@ -742,7 +773,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'The Local Train - Choona',
     audioAura: 'Indie Rock / Carter Road Breeze',
     badges: ['🌸 Girls-Only Host', '📸 35mm Analog', '🌊 Carter Road Local'],
-    bioManifesto: 'Shooting street film on Carter Road promenade and hunting cutting chai.'
+    bioManifesto: 'Shooting street film on Carter Road promenade and hunting cutting chai.',
+    vibeTags: ['🌊 Carter Road Sunsets', '☕ Cold Brew', '📸 35mm Film', '🌸 Girls-Only Safe Spaces'],
+    liveStatus: 'Walking Carter Road Promenade 🌊'
   },
   {
     id: 'user-rohan',
@@ -759,7 +792,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'Aphex Twin - #3',
     audioAura: 'Deep Focus Ambient / Coding',
     badges: ['💻 Vibe Coder', '☕ Filter Coffee Fanatic'],
-    bioManifesto: 'Reading papers at Cyber Hub cafes. Down for spontaneous code sprints.'
+    bioManifesto: 'Reading papers at Cyber Hub cafes. Down for spontaneous code sprints.',
+    vibeTags: ['💻 Vibe Coding & Shippers', '📚 Indie Book Swaps', '☕ Specialty Pour-Overs', '🌙 Cyber Hub Nights'],
+    liveStatus: 'Hacking late at Cyber Hub 💻'
   },
   {
     id: 'user-kavya',
@@ -776,7 +811,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'Charli xcx - 360',
     audioAura: 'High-BPM Cardio / Synth Pop',
     badges: ['🏸 Badminton Ace', '⚡ 100% Show-Up', '🔥 Night Owl 15x'],
-    bioManifesto: 'Playing court matches across HSR and Koramangala. No flakes allowed.'
+    bioManifesto: 'Playing court matches across HSR and Koramangala. No flakes allowed.',
+    vibeTags: ['🎾 Turf Badminton 2v2', '⚡ High-Entropy Meetups', '🧋 3am Chai Runs', '🎧 Synth Pop'],
+    liveStatus: 'Seeking 4th for Badminton 🏸'
   },
   {
     id: 'user-ananya',
@@ -793,7 +830,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'Clairo - Juna',
     audioAura: 'Matcha Jazz / Coastal Sunset',
     badges: ['🌸 Girls Only Safe Host', '☕ Specialty Brew'],
-    bioManifesto: 'Hosting safe chill walks on Carter Road and trying every matcha spot in Bandra.'
+    bioManifesto: 'Hosting safe chill walks on Carter Road and trying every matcha spot in Bandra.',
+    vibeTags: ['🍵 Iced Matcha Lattes', '🌊 Sunset Sea Walks', '🌸 Girls-Only Safe Spaces', '🧥 Vintage & Thrifting'],
+    liveStatus: 'Sunset Promenade Walk 🌊'
   },
   {
     id: 'user-zoya',
@@ -810,7 +849,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'When Chai Met Toast - Joy of Little Things',
     audioAura: 'Acoustic Indie / Lane 7 KP',
     badges: ['🎸 Jam Leader', '☕ Chai Connoisseur'],
-    bioManifesto: 'Acoustic guitarist hunting spontaneous cafe jam lobbies in Koregaon Park.'
+    bioManifesto: 'Acoustic guitarist hunting spontaneous cafe jam lobbies in Koregaon Park.',
+    vibeTags: ['🎸 Acoustic Jam', '🧋 3am Chai Runs', '☕ Specialty Brew', '📚 Indie Book Swaps'],
+    liveStatus: 'Acoustic Jam at Lane 7 🎸'
   },
   {
     id: 'user-kabir',
@@ -827,7 +868,9 @@ export const DEMO_PROFILES: UserProfile[] = [
     currentRotation: 'Karan Aujla - Winning Speech',
     audioAura: 'High-BPM Punjabi Beats / 5K Sprint',
     badges: ['🏃‍♂️ 5K Pacer', '⚡ 100% Show-Up'],
-    bioManifesto: 'Morning pace runs around Hauz Khas Lake followed by Blue Tokai iced brew.'
+    bioManifesto: 'Morning pace runs around Hauz Khas Lake followed by Blue Tokai iced brew.',
+    vibeTags: ['🏃 5K Pacer', '☕ Cold Brew', '🌲 Deer Park Nature', '⚡ High-Entropy Meetups'],
+    liveStatus: 'Pacing 5k around HKV Lake 🏃'
   }
 ];
 
@@ -875,6 +918,11 @@ export function generateRandomPersona(city: string = 'Bengaluru'): UserProfile {
   const rotation = rand(RANDOM_ROTATIONS);
   const aura = rand(RANDOM_AURAS);
 
+  // Pick 3-4 random Gen Z tags
+  const shuffledTags = [...GEN_Z_VIBE_TAGS].sort(() => 0.5 - Math.random());
+  const selectedVibeTags = shuffledTags.slice(0, 4);
+  const liveStatus = rand(LIVE_STATUS_OPTIONS);
+
   return {
     id: `user-${Date.now().toString().slice(-6)}`,
     handle,
@@ -890,7 +938,9 @@ export function generateRandomPersona(city: string = 'Bengaluru'): UserProfile {
     currentRotation: rotation,
     audioAura: aura,
     badges: ['⚡ New Explorer', '🔥 100% Show-Up'],
-    bioManifesto: 'Spontaneous sidequest explorer. Down for chai, sports turf, or hacking.'
+    bioManifesto: 'Spontaneous sidequest explorer. Down for 3am tea stalls, sunset walks, or music jams.',
+    vibeTags: selectedVibeTags,
+    liveStatus
   };
 }
 

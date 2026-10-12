@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
   ShieldCheck, Sparkles, Music, Flame, Zap, Award, 
-  Share2, Check, ExternalLink, Dices, UserPlus, Users 
+  Share2, Check, ExternalLink, Dices, UserPlus, Users, Radio, Tag 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { DEMO_PROFILES, generateRandomPersona } from '@/lib/constants';
+import { DEMO_PROFILES, generateRandomPersona, GEN_Z_VIBE_TAGS, LIVE_STATUS_OPTIONS } from '@/lib/constants';
 import { playRadarBlip, playCheckInChime } from '@/lib/audio';
 
 export default function BentoProfile() {
@@ -18,7 +18,8 @@ export default function BentoProfile() {
     switchProfile,
     resetToNewIndividual,
     selectedCity,
-    setInspectedMember
+    setInspectedMember,
+    updateLiveStatus
   } = useSideQuestStore();
   const [copied, setCopied] = useState(false);
 
@@ -147,6 +148,53 @@ export default function BentoProfile() {
         </div>
       </div>
 
+      {/* 1-Tap Live IRL Status Selector Bar */}
+      <div className="p-3.5 rounded-2xl bg-[#141418] border border-[#24242B] space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono font-bold text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5">
+            <Radio className="w-3.5 h-3.5 text-[#CCFF00] animate-pulse" /> LIVE IRL STATUS
+          </span>
+          <span className="text-[10px] font-mono text-[#CCFF00] bg-[#CCFF00]/10 px-2 py-0.5 rounded-full border border-[#CCFF00]/30 font-bold">
+            1-TAP UPDATE
+          </span>
+        </div>
+
+        {/* Current Status Callout */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0A0A0C] border border-[#24242B]">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#CCFF00] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#CCFF00]"></span>
+          </span>
+          <span className="text-xs font-mono font-bold text-[#F4F4F6]">
+            {currentUser.liveStatus || LIVE_STATUS_OPTIONS[0]}
+          </span>
+        </div>
+
+        {/* Fast selector pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-1">
+          {LIVE_STATUS_OPTIONS.map((status) => {
+            const isActive = (currentUser.liveStatus || LIVE_STATUS_OPTIONS[0]) === status;
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => {
+                  playRadarBlip();
+                  updateLiveStatus(status);
+                }}
+                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-mono whitespace-nowrap transition-all border ${
+                  isActive
+                    ? 'bg-[#CCFF00] text-[#0A0A0C] font-bold border-[#CCFF00] shadow-[0_0_10px_rgba(204,255,0,0.3)] scale-[1.02]'
+                    : 'bg-[#1B1B22] text-[#8E8E9F] hover:text-[#F4F4F6] border-[#24242B] hover:border-[#CCFF00]/50'
+                }`}
+              >
+                {status}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Bento Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         
@@ -185,15 +233,23 @@ export default function BentoProfile() {
           </div>
         </div>
 
-        {/* Bento 2 (Medium Left - Street Cred Badges) */}
+        {/* Bento 2 (Medium Left - Street Cred Lore) */}
         <div className="p-4 rounded-2xl bg-[#141418] border border-[#24242B] flex flex-col justify-between">
           <div>
             <span className="text-xs font-mono font-bold text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
-              <Award className="w-3.5 h-3.5 text-[#CCFF00]" /> STREET CRED BADGES
+              <Award className="w-3.5 h-3.5 text-[#CCFF00]" /> STREET CRED & LORE
             </span>
             <div className="space-y-1.5">
+              <div className="px-2.5 py-1.5 rounded-lg bg-[#1B1B22] border border-[#24242B] text-[11px] font-mono flex items-center justify-between">
+                <span className="text-[#8E8E9F]">Spontaneity Rank</span>
+                <span className="text-[#CCFF00] font-bold">S-Tier ⚡</span>
+              </div>
+              <div className="px-2.5 py-1.5 rounded-lg bg-[#1B1B22] border border-[#24242B] text-[11px] font-mono flex items-center justify-between">
+                <span className="text-[#8E8E9F]">Flake Probability</span>
+                <span className="text-[#00F0FF] font-bold">0.0% 🛡️</span>
+              </div>
               {currentUser.badges?.map((badge, idx) => (
-                <div key={idx} className="px-2.5 py-1.5 rounded-lg bg-[#1B1B22] border border-[#24242B] text-xs font-mono text-[#F4F4F6] flex items-center gap-2">
+                <div key={idx} className="px-2.5 py-1.5 rounded-lg bg-[#1B1B22] border border-[#24242B] text-[11px] font-mono text-[#F4F4F6] flex items-center gap-2">
                   <span>{badge}</span>
                 </div>
               ))}
@@ -224,17 +280,31 @@ export default function BentoProfile() {
           </div>
         </div>
 
-        {/* Bento 4 (Wide Bottom - Anti Resume Manifesto) */}
+        {/* Bento 4 (Wide Bottom - Hyperfixations & Lore) */}
         <div className="sm:col-span-2 p-4 rounded-2xl bg-[#141418] border border-[#24242B]">
-          <span className="text-xs font-mono font-bold text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-            ⚡ CURRENT OBSESSION & STACK
-          </span>
-          <p className="text-xs font-mono text-[#F4F4F6] leading-relaxed">
-            "{currentUser.bioManifesto}"
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs font-mono font-bold text-[#8E8E9F] uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-[#CCFF00]" /> CURRENT HYPERFIXATIONS & LORE
+            </span>
+            <button
+              onClick={() => setAuthModalOpen(true, 'edit taste profile')}
+              className="text-[10px] font-mono text-[#00F0FF] hover:underline flex items-center gap-1"
+            >
+              <Sparkles className="w-3 h-3" /> Edit Tags
+            </button>
+          </div>
+          <p className="text-xs font-mono text-[#F4F4F6] leading-relaxed italic">
+            "{currentUser.bioManifesto || 'Late night chai runs and building cool things.'}"
           </p>
           <div className="flex flex-wrap gap-1.5 mt-3">
-            {['Next.js', 'PySpark', 'FastAPI', 'High-Entropy Tea Stalls', 'Specialty Coffee'].map(tag => (
-              <span key={tag} className="px-2 py-0.5 rounded bg-[#1B1B22] border border-[#24242B] text-[10px] font-mono text-[#8E8E9F]">
+            {(currentUser.vibeTags && currentUser.vibeTags.length > 0 
+              ? currentUser.vibeTags 
+              : ['🧋 3am Chai Runs', '🎾 Turf Badminton 2v2', '📸 35mm Film Photography', '🍵 Iced Matcha Lattes']
+            ).map(tag => (
+              <span 
+                key={tag} 
+                className="px-2.5 py-1 rounded-lg bg-[#1B1B22] border border-[#24242B] text-xs font-mono text-[#CCFF00] flex items-center gap-1 shadow-sm hover:border-[#CCFF00]/50 transition-colors"
+              >
                 {tag}
               </span>
             ))}

@@ -20,7 +20,9 @@ const DEFAULT_NEW_EXPLORER: UserProfile = {
   audioAura: 'Indie / Electronic Chill',
   badges: ['⚡ New Explorer', '🔥 100% Show-Up'],
   bioManifesto: 'Spontaneous sidequest explorer. Tap "Edit Profile" to claim your unique identity!',
-  isProfileCustomized: false
+  isProfileCustomized: false,
+  vibeTags: ['🧋 3am Chai Runs', '🎧 UK Garage', '🎾 Turf Badminton', '📸 Film Camera', '🍵 Iced Matcha'],
+  liveStatus: 'Down for Chai right now 🧋'
 };
 
 interface SideQuestStore {
@@ -62,6 +64,7 @@ interface SideQuestStore {
   loginUser: (userData: Partial<UserProfile>) => void;
   logoutUser: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
+  updateLiveStatus: (status: string) => void;
   switchProfile: (profile: UserProfile) => void;
   resetToNewIndividual: () => void;
   
@@ -202,6 +205,15 @@ export const useSideQuestStore = create<SideQuestStore>()(
             ...state.currentUser,
             ...data,
             isProfileCustomized: true
+          }
+        }));
+      },
+
+      updateLiveStatus: (status: string) => {
+        set(state => ({
+          currentUser: {
+            ...state.currentUser,
+            liveStatus: status
           }
         }));
       },

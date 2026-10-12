@@ -41,6 +41,9 @@ export interface UserProfile {
   badges?: string[];
   bioManifesto?: string;
   isProfileCustomized?: boolean;
+  vibeTags?: string[];
+  liveStatus?: string;
+  socialLink?: string;
 }
 
 export interface DropMember {

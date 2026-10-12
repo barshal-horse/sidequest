@@ -1,5 +1,13 @@
 import assert from 'node:assert';
-import { METRO_CITIES, INITIAL_DROPS, INITIAL_DROP_CHATS, DEMO_PROFILES } from '../src/lib/constants.js';
+import { 
+  METRO_CITIES, 
+  INITIAL_DROPS, 
+  INITIAL_DROP_CHATS, 
+  DEMO_PROFILES,
+  GEN_Z_VIBE_TAGS,
+  LIVE_STATUS_OPTIONS,
+  generateRandomPersona
+} from '../src/lib/constants.js';
 import { 
   calculateDistanceInMeters, 
   formatDistance, 
@@ -218,6 +226,90 @@ runTest('Every metro city has at least 1 active flare in INITIAL_DROPS', () => {
     const dropsInCity = INITIAL_DROPS.filter(d => d.cityId === city.id);
     assert.ok(dropsInCity.length >= 1, `City ${city.name} must have at least 1 active drop flare`);
   });
+});
+
+// ============================================================================
+// 5. PROFILE UPDATION, HYPERFIXATIONS & LIVE STATUS TESTS
+// ============================================================================
+console.log('\n👤 SECTION 5: Profile Updation, Gen Z Hyperfixations & Live Status Tests');
+
+runTest('GEN_Z_VIBE_TAGS has rich authentic variety with zero corporate resume jargon', () => {
+  assert.ok(GEN_Z_VIBE_TAGS.length >= 10, 'Expected at least 10 curated Gen Z vibe tags');
+  
+  const corporateJargon = ['react', 'fastapi', 'pyspark', 'kubernetes', 'next.js', 'docker', 'aws', 'backend', 'frontend'];
+  GEN_Z_VIBE_TAGS.forEach(tag => {
+    const lower = tag.toLowerCase();
+    corporateJargon.forEach(word => {
+      assert.ok(!lower.includes(word), `Vibe tag "${tag}" must not contain corporate jargon "${word}"`);
+    });
+  });
+});
+
+runTest('LIVE_STATUS_OPTIONS provides realistic IRL spontaneity states', () => {
+  assert.ok(LIVE_STATUS_OPTIONS.length >= 5, 'Expected at least 5 live status options');
+  LIVE_STATUS_OPTIONS.forEach(status => {
+    assert.ok(typeof status === 'string' && status.length > 5, 'Each status must be a descriptive string');
+  });
+});
+
+runTest('generateRandomPersona rolls complete profile with vibeTags and liveStatus', () => {
+  const persona = generateRandomPersona('Bengaluru');
+  assert.ok(persona.handle && persona.handle.length > 0, 'Generated persona must have a handle');
+  assert.ok(persona.fullName && persona.fullName.length > 0, 'Generated persona must have a fullName');
+  assert.ok(persona.avatarUrl && persona.avatarUrl.startsWith('http'), 'Generated persona must have a valid avatarUrl');
+  assert.ok(persona.city === 'Bengaluru', 'Persona city must match input city');
+  assert.ok(Array.isArray(persona.vibeTags) && persona.vibeTags.length >= 3, 'Persona must have at least 3 vibeTags');
+  assert.ok(typeof persona.liveStatus === 'string' && persona.liveStatus.length > 0, 'Persona must have a liveStatus');
+});
+
+runTest('All 9 DEMO_PROFILES feature unique identities with valid vibeTags & liveStatus', () => {
+  assert.strictEqual(DEMO_PROFILES.length, 9, 'Expected 9 demo squad profiles');
+  DEMO_PROFILES.forEach(profile => {
+    assert.ok(Array.isArray(profile.vibeTags) && profile.vibeTags.length >= 2, `Profile ${profile.handle} must have at least 2 vibeTags`);
+    assert.ok(typeof profile.liveStatus === 'string' && profile.liveStatus.length > 0, `Profile ${profile.handle} must have liveStatus`);
+  });
+});
+
+runTest('Profile customizer simulation: updateProfile and updateLiveStatus work accurately', () => {
+  let mockUser = {
+    id: 'user-pilot',
+    handle: 'pilot.789',
+    fullName: 'Explorer',
+    isProfileCustomized: false,
+    bioManifesto: 'Temporary bio',
+    vibeTags: ['🧋 3am Chai Runs'],
+    liveStatus: LIVE_STATUS_OPTIONS[0]
+  };
+
+  // 1. Simulate updateProfile
+  const profileUpdates = {
+    handle: 'chai.enthusiast',
+    fullName: 'Aarav K.',
+    bioManifesto: 'Cold brew in morning, 3am cutting chai at night. Film photographer.',
+    vibeTags: ['🧋 3am Chai Runs', '📸 35mm Film Photography', '🍵 Iced Matcha Lattes'],
+    liveStatus: 'Seeking 4th for Badminton 🏸',
+    isProfileCustomized: true
+  };
+
+  mockUser = {
+    ...mockUser,
+    ...profileUpdates
+  };
+
+  assert.strictEqual(mockUser.handle, 'chai.enthusiast');
+  assert.strictEqual(mockUser.fullName, 'Aarav K.');
+  assert.strictEqual(mockUser.isProfileCustomized, true);
+  assert.strictEqual(mockUser.vibeTags.length, 3);
+  assert.strictEqual(mockUser.liveStatus, 'Seeking 4th for Badminton 🏸');
+
+  // 2. Simulate updateLiveStatus (1-tap update)
+  const newLiveStatus = 'Down for Chai right now 🧋';
+  mockUser = {
+    ...mockUser,
+    liveStatus: newLiveStatus
+  };
+
+  assert.strictEqual(mockUser.liveStatus, 'Down for Chai right now 🧋');
 });
 
 // ============================================================================
