@@ -462,7 +462,11 @@ export const useSideQuestStore = create<SideQuestStore>()(
     }),
     {
       name: 'sidequest_storage_v1',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => (typeof window !== 'undefined' ? window.localStorage : {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {}
+      })),
       partialize: (state) => ({
         currentUser: state.currentUser,
         isAuthenticated: state.isAuthenticated,

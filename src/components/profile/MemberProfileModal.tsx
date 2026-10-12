@@ -1,21 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
-  X, ShieldCheck, Music, Award, Sparkles, Zap, MessageSquare, CheckCircle2 
+  X, ShieldCheck, Music, Award, Sparkles, Zap, MessageSquare, CheckCircle2, Flame 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { playRadarBlip } from '@/lib/audio';
+import { playRadarBlip, playCheckInChime } from '@/lib/audio';
 
 export default function MemberProfileModal() {
   const { 
     inspectedMember, 
     setInspectedMember, 
     currentUser, 
-    setActiveDropId, 
+    setActiveDropId,
+    setCreateSheetOpen,
+    setActiveTab,
     drops 
   } = useSideQuestStore();
+
+  const [pingSent, setPingSent] = useState(false);
 
   if (!inspectedMember) return null;
 
@@ -28,14 +32,30 @@ export default function MemberProfileModal() {
     ? (sharedArtists.length > 0 ? 98 : 94) 
     : 88;
 
+  const handleStartQuestWithMember = () => {
+    confetti({
+      particleCount: 50,
+      spread: 70,
+      colors: ['#CCFF00', '#00F0FF']
+    });
+    playRadarBlip();
+    setInspectedMember(null);
+    setActiveTab('radar');
+    setCreateSheetOpen(true);
+  };
+
   const handleSendPing = () => {
+    setPingSent(true);
     confetti({
       particleCount: 40,
       spread: 60,
       colors: ['#00F0FF', '#CCFF00']
     });
-    playRadarBlip();
-    setInspectedMember(null);
+    playCheckInChime();
+    setTimeout(() => {
+      setInspectedMember(null);
+      setPingSent(false);
+    }, 800);
   };
 
   return (
@@ -187,13 +207,35 @@ export default function MemberProfileModal() {
           </div>
         )}
 
-        {/* Action Button */}
-        <div className="pt-2">
+        {/* Action CTAs */}
+        <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            onClick={handleStartQuestWithMember}
+            className="py-2.5 px-3 rounded-xl bg-[#CCFF00] hover:bg-[#b8e600] text-[#0A0A0C] font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_16px_rgba(204,255,0,0.3)] transition-all"
+          >
+            <Flame className="w-4 h-4 fill-current text-[#0A0A0C]" />
+            <span>Drop Flare with @{inspectedMember.handle}</span>
+          </button>
+
           <button
             onClick={handleSendPing}
-            className="w-full py-2.5 rounded-xl bg-[#00F0FF] hover:bg-[#00d6e6] text-[#0A0A0C] font-mono font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(0,240,255,0.3)] transition-all"
+            className={`py-2.5 px-3 rounded-xl font-mono font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+              pingSent 
+                ? 'bg-[#00F0FF] text-[#0A0A0C]' 
+                : 'bg-[#141418] hover:bg-[#1B1B22] border border-[#00F0FF]/50 text-[#00F0FF]'
+            }`}
           >
-            <CheckCircle2 className="w-4 h-4" /> Vibe Checked
+            {pingSent ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Vibe Wave Sent!</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4" />
+                <span>Send Vibe Wave 👋</span>
+              </>
+            )}
           </button>
         </div>
 

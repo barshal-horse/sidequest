@@ -2,6 +2,7 @@ import assert from 'node:assert';
 import { METRO_CITIES, INITIAL_DROPS, INITIAL_DROP_CHATS, DEMO_PROFILES, GEN_Z_VIBE_TAGS, LIVE_STATUS_OPTIONS, generateRandomPersona } from '../src/lib/constants.js';
 import { calculateDistanceInMeters, formatDistance } from '../src/lib/geo.js';
 import { UserProfile, Drop, ChatMessage } from '../src/types/index.js';
+import { useSideQuestStore } from '../src/lib/store.js';
 
 console.log('🧪 ========================================================');
 console.log('🤖 SIDEQUEST MULTI-PERSONA AUTONOMOUS BETA TESTING SUITE');
@@ -156,15 +157,21 @@ console.log('👥 STAGE 1: Dynamic Profile Registration & Scale Stress Testing')
 
 let mockDirectory: UserProfile[] = [...DEMO_PROFILES];
 
-runSimulation('Directory scales from initial 9 demo profiles to 29+ with 0 collisions', () => {
+runSimulation('Directory and live Zustand store scale from initial 9 demo profiles to 29+ with 0 collisions', () => {
   const initialCount = mockDirectory.length;
   assert.strictEqual(initialCount, 9);
+
+  // Test both mock array and live Zustand store registerProfile
+  const store = useSideQuestStore.getState();
+  assert.ok(store.registeredProfiles.length >= 9);
 
   BETA_TESTERS.forEach(tester => {
     const exists = mockDirectory.some(p => p.id === tester.id || p.handle === tester.handle);
     if (!exists) {
       mockDirectory.push(tester);
     }
+    // Also register directly into Zustand store
+    useSideQuestStore.getState().registerProfile(tester);
   });
 
   assert.strictEqual(mockDirectory.length, 9 + 20, 'Directory must contain 29 profiles');
@@ -172,9 +179,13 @@ runSimulation('Directory scales from initial 9 demo profiles to 29+ with 0 colli
   // Verify all handles are unique
   const handles = new Set(mockDirectory.map(p => p.handle));
   assert.strictEqual(handles.size, mockDirectory.length, 'All 29 profiles must have unique handles');
+
+  // Verify Zustand store scaled to 29
+  const storeProfiles = useSideQuestStore.getState().registeredProfiles;
+  assert.strictEqual(storeProfiles.length, 29, 'Store registeredProfiles must scale to 29');
 });
 
-runSimulation('Updating an existing profile updates in-place without duplicate entries', () => {
+runSimulation('Updating an existing profile updates in-place in both directory and live Zustand store', () => {
   const targetId = 'beta-user-01';
   const updatedName = 'Kabir Sen (Verified)';
   const updatedStatus = 'Walking Indie Coffee Roasters ☕';
@@ -187,6 +198,19 @@ runSimulation('Updating an existing profile updates in-place without duplicate e
   assert.strictEqual(found?.fullName, updatedName);
   assert.strictEqual(found?.liveStatus, updatedStatus);
   assert.strictEqual(mockDirectory.length, 29, 'Directory count must remain 29');
+
+  // Test live store updateProfile
+  const testerToUpdate = BETA_TESTERS[0];
+  useSideQuestStore.getState().registerProfile({
+    ...testerToUpdate,
+    fullName: updatedName,
+    liveStatus: updatedStatus
+  });
+
+  const storeProfile = useSideQuestStore.getState().registeredProfiles.find(p => p.id === targetId);
+  assert.strictEqual(storeProfile?.fullName, updatedName);
+  assert.strictEqual(storeProfile?.liveStatus, updatedStatus);
+  assert.strictEqual(useSideQuestStore.getState().registeredProfiles.length, 29);
 });
 
 // ============================================================================

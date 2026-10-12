@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
   ShieldCheck, Sparkles, Music, Flame, Zap, Award, 
@@ -64,11 +64,27 @@ export default function BentoProfile() {
     return list.filter(p => p.id !== currentUser.id && p.handle !== currentUser.handle);
   }, [registeredProfiles, currentUser]);
 
+  // Reset pageIndex when city or search filters change to prevent phantom empty states
+  useEffect(() => {
+    setPageIndex(0);
+  }, [selectedCity.id, searchQuery, filterCityOnly, selectedStatusFilter]);
+
   const filteredExplorers = useMemo(() => {
     return otherProfiles.filter(p => {
-      // 1. City filter
-      if (filterCityOnly && p.city.toLowerCase() !== selectedCity.name.toLowerCase()) {
-        return false;
+      // 1. City filter (robust matching for Delhi / Delhi-NCR / BLR / BOM etc.)
+      if (filterCityOnly) {
+        const pCity = p.city.toLowerCase().trim();
+        const sCity = selectedCity.name.toLowerCase().trim();
+        const sId = selectedCity.id.toLowerCase().trim();
+        const matchesCity = pCity === sCity || 
+          pCity.includes(sId) || 
+          sCity.includes(pCity) || 
+          (sId === 'del' && pCity.includes('delhi')) ||
+          (sId === 'blr' && (pCity.includes('blr') || pCity.includes('bangalore') || pCity.includes('bengaluru'))) ||
+          (sId === 'bom' && (pCity.includes('bom') || pCity.includes('mumbai')));
+        if (!matchesCity) {
+          return false;
+        }
       }
       // 2. Status filter
       if (selectedStatusFilter !== 'ALL' && p.liveStatus !== selectedStatusFilter) {
@@ -89,7 +105,9 @@ export default function BentoProfile() {
     }).map(profile => {
       // Calculate real Vibe Match %
       let score = 72;
-      if (profile.city.toLowerCase() === currentUser.city.toLowerCase()) score += 15;
+      const pCity = profile.city.toLowerCase();
+      const userCity = currentUser.city.toLowerCase();
+      if (pCity === userCity || pCity.includes(userCity) || userCity.includes(pCity)) score += 15;
       const sharedTags = profile.vibeTags?.filter(t => currentUser.vibeTags?.includes(t)) || [];
       score += Math.min(12, sharedTags.length * 4);
       return {
@@ -97,11 +115,12 @@ export default function BentoProfile() {
         matchScore: Math.min(99, score)
       };
     }).sort((a, b) => b.matchScore - a.matchScore);
-  }, [otherProfiles, filterCityOnly, selectedCity.name, selectedStatusFilter, searchQuery, currentUser]);
+  }, [otherProfiles, filterCityOnly, selectedCity.name, selectedCity.id, selectedStatusFilter, searchQuery, currentUser]);
 
   const BATCH_SIZE = 6;
   const totalPages = Math.max(1, Math.ceil(filteredExplorers.length / BATCH_SIZE));
-  const currentBatch = filteredExplorers.slice(pageIndex * BATCH_SIZE, (pageIndex + 1) * BATCH_SIZE);
+  const safePageIndex = pageIndex >= totalPages ? 0 : pageIndex;
+  const currentBatch = filteredExplorers.slice(safePageIndex * BATCH_SIZE, (safePageIndex + 1) * BATCH_SIZE);
 
   const handleNextBatch = () => {
     playRadarBlip();
@@ -474,7 +493,7 @@ export default function BentoProfile() {
                 title="Shuffle to next squad batch"
               >
                 <Shuffle className="w-2.5 h-2.5" />
-                <span>Batch ({pageIndex + 1}/{totalPages})</span>
+                <span>Batch ({safePageIndex + 1}/{totalPages})</span>
               </button>
             )}
           </div>
@@ -507,7 +526,7 @@ export default function BentoProfile() {
               className={`px-2 py-0.5 rounded-md border whitespace-nowrap transition-all ${
                 selectedStatusFilter === status
                   ? 'border-[#00F0FF] bg-[#00F0FF] text-[#0A0A0C] font-bold'
-                  : 'border-[#24242B] bg-[#141418] text-[#8E8E9F] hover:text-[#F4F4F6]'
+                : 'border-[#24242B] bg-[#141418] text-[#8E8E9F] hover:text-[#F4F4F6]'
               }`}
             >
               {status}
@@ -516,7 +535,7 @@ export default function BentoProfile() {
         </div>
 
         {/* Explorers Grid Display */}
-        {currentBatch.length === 0 ? (
+        {filteredExplorers.length === 0 ? (
           <div className="p-6 text-center rounded-xl bg-[#0A0A0C] border border-[#24242B] space-y-1.5">
             <span className="text-xl">🔍</span>
             <p className="text-xs font-mono text-[#F4F4F6]">No squad explorers match this filter.</p>
