@@ -13,6 +13,8 @@ export interface PolaroidExportData {
   vibeTag?: string;
 }
 
+import { trackEvent } from '@/lib/analytics';
+
 export async function exportPolaroidStoryCard(data: PolaroidExportData): Promise<boolean> {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -202,6 +204,13 @@ export async function exportPolaroidStoryCard(data: PolaroidExportData): Promise
 
         const fileName = `SideQuest-Polaroid-${Date.now()}.png`;
         const file = new File([blob], fileName, { type: 'image/png' });
+
+        trackEvent('story_exported', {
+          title: data.title,
+          city: data.cityName,
+          venueName: data.locationName,
+          squadCount: data.squadMembers.length
+        });
 
         // Try Web Share API (mobile native Instagram/WhatsApp share)
         if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {

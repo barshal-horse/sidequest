@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playDiceRoll, playCheckInChime, playRadarBlip } from '@/lib/audio';
+import { trackEvent } from '@/lib/analytics';
 
 interface MicroQuestTemplate {
   title: string;
@@ -241,6 +242,9 @@ export default function SideQuestRoulette() {
         clearInterval(interval);
         setIsRolling(false);
         playCheckInChime();
+        trackEvent('roulette_rolled', {
+          city: selectedCity.name
+        });
         confetti({
           particleCount: 40,
           spread: 60,

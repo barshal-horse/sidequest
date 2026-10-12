@@ -29,6 +29,8 @@ export const metadata: Metadata = {
   }
 };
 
+import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,6 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full antialiased">
       <body className="min-h-full flex flex-col bg-[#0A0A0C] text-[#F4F4F6]">
+        <AnalyticsProvider />
         {children}
       </body>
     </html>

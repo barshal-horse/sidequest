@@ -16,6 +16,7 @@ import { DEMO_PROFILES } from '@/lib/constants';
 import { playRadarBlip, playCheckInChime } from '@/lib/audio';
 import { DropMember } from '@/types';
 import SquadQrModal from './SquadQrModal';
+import { trackEvent } from '@/lib/analytics';
 
 export default function DropModal() {
   const { 
@@ -169,6 +170,13 @@ export default function DropModal() {
     const success = joinDrop(drop.id);
     if (success) {
       playCheckInChime();
+      trackEvent('flare_joined', {
+        dropId: drop.id,
+        title: drop.title,
+        category: drop.category,
+        city: selectedCity.name,
+        venueName: drop.venueName
+      });
     }
   };
 
@@ -176,6 +184,13 @@ export default function DropModal() {
     checkInDrop(drop.id);
     playCheckInChime();
     setGpsError(null);
+    trackEvent('flare_checkin_verified', {
+      dropId: drop.id,
+      title: drop.title,
+      category: drop.category,
+      city: selectedCity.name,
+      venueName: drop.venueName
+    });
     confetti({
       particleCount: 100,
       spread: 80,

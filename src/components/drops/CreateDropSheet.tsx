@@ -6,6 +6,7 @@ import { DropCategory } from '@/types';
 import { X, Zap, Clock, Users, Shield, MapPin, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playCheckInChime } from '@/lib/audio';
+import { trackEvent } from '@/lib/analytics';
 
 export default function CreateDropSheet() {
   const { 
@@ -59,6 +60,15 @@ export default function CreateDropSheet() {
     });
 
     playCheckInChime();
+
+    trackEvent('flare_created', {
+      city: selectedCity.name,
+      category,
+      venueName: venueName.trim(),
+      maxSlots,
+      isGirlsOnly,
+      durationMinutes: durationMins
+    });
 
     confetti({
       particleCount: 60,

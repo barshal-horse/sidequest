@@ -18,6 +18,7 @@ import {
   findClosestMetro,
   CHECKIN_GEOFENCE_RADIUS_METERS 
 } from '../src/lib/geo.js';
+import { trackEvent, identifyUser } from '../src/lib/analytics.js';
 
 console.log('🧪 ========================================================');
 console.log('⚡ SIDEQUEST COMPREHENSIVE AUTOMATED TEST SUITE');
@@ -576,6 +577,29 @@ runTest('Sonar Radar Sweep calculates 2.0km acoustic blips and radial range band
 
   assert.ok(dist < sonarRangeMeters, `Nearby explorer should be within 2.0km sonar range (was ${dist}m)`);
   assert.ok(dist > 0);
+});
+
+// ============================================================================
+// 9. TELEMETRY & PRODUCT ANALYTICS ENGINE TESTS
+// ============================================================================
+console.log('\n📊 SECTION 9: Telemetry & Product Analytics Engine Tests');
+
+runTest('Universal trackEvent dispatches safely without crashing across node and browser', () => {
+  assert.doesNotThrow(() => {
+    trackEvent('flare_created', { city: 'Bengaluru', category: 'CHAI_FOOD', maxSlots: 4 });
+    trackEvent('flare_joined', { dropId: 'blr-drop-1', city: 'Bengaluru' });
+    trackEvent('flare_checkin_verified', { method: 'qr', dropId: 'blr-drop-1' });
+    trackEvent('polaroid_snapped', { filter: 'vintage', source: 'live_viewfinder' });
+    trackEvent('story_exported', { title: '3am Chai Run', city: 'Bengaluru' });
+    trackEvent('roulette_rolled', { city: 'Mumbai' });
+    trackEvent('sonar_swept', { city: 'Delhi', rangeMeters: 2000 });
+  }, 'trackEvent must execute gracefully in any runtime environment');
+});
+
+runTest('identifyUser attaches distinct user attributes safely', () => {
+  assert.doesNotThrow(() => {
+    identifyUser('pilot-4821', { handle: 'harshal.eth', city: 'Bengaluru', karmaScore: 95 });
+  }, 'identifyUser must execute gracefully without exceptions');
 });
 
 // ============================================================================

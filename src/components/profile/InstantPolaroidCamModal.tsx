@@ -8,6 +8,7 @@ import {
 import confetti from 'canvas-confetti';
 import { playCameraShutter, playFilmEject, playCheckInChime, playRadarBlip } from '@/lib/audio';
 import { exportPolaroidStoryCard } from '@/lib/storyExport';
+import { trackEvent } from '@/lib/analytics';
 
 const QUICK_FILM_PRESETS = [
   {
@@ -173,6 +174,12 @@ export default function InstantPolaroidCamModal() {
     // Auto default caption
     if (!venueName) setVenueName(selectedCity.hotspots[0]?.name || selectedCity.name);
     if (!caption) setCaption('Instant IRL snap with the squad!');
+
+    trackEvent('polaroid_snapped', {
+      source: 'live_viewfinder',
+      filter: selectedFilter,
+      city: selectedCity.name
+    });
   };
 
   // Upload/Snap directly from Device Camera Roll
@@ -192,6 +199,11 @@ export default function InstantPolaroidCamModal() {
 
         if (!venueName) setVenueName(selectedCity.hotspots[0]?.name || selectedCity.name);
         if (!caption) setCaption('Snapped from roll • Verified Meetup');
+
+        trackEvent('polaroid_snapped', {
+          source: 'camera_roll',
+          city: selectedCity.name
+        });
       }
     };
     reader.readAsDataURL(file);

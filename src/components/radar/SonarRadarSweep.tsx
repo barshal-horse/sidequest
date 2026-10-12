@@ -5,6 +5,7 @@ import { useSideQuestStore } from '@/lib/store';
 import { Radio, Sparkles, Navigation, X, User, Zap, MessageSquare, Flame } from 'lucide-react';
 import { playSonarPing, playRadarBlip, playCheckInChime } from '@/lib/audio';
 import { DEMO_PROFILES } from '@/lib/constants';
+import { trackEvent } from '@/lib/analytics';
 
 interface SonarRadarSweepProps {
   isOpen: boolean;
@@ -40,6 +41,11 @@ export default function SonarRadarSweep({ isOpen, onClose }: SonarRadarSweepProp
       setIsSweeping(false);
       setHasScanned(true);
       playCheckInChime();
+      trackEvent('sonar_swept', {
+        city: selectedCity.name,
+        rangeMeters: 2000,
+        explorersFound: displayProfiles.length
+      });
     }, 1200);
   };
 
