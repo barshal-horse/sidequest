@@ -1,4 +1,4 @@
-import { MetroCity, Drop } from '@/types';
+import { MetroCity, Drop, UserProfile } from '@/types';
 
 export const METRO_CITIES: MetroCity[] = [
   {
@@ -343,3 +343,224 @@ export const INITIAL_DROPS: Drop[] = [
     aiVibeNote: 'Bring your instrument or just come vibe. Indie folk, acoustic & pop.'
   }
 ];
+
+export const DEMO_PROFILES: UserProfile[] = [
+  {
+    id: 'user-harshal',
+    handle: 'harshal.b',
+    fullName: 'Harshal Borse',
+    avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+    city: 'Bengaluru',
+    karmaScore: 100,
+    questsCompleted: 28,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'M',
+    spotifyTopArtists: ['Fred again..', 'The Weeknd', 'Karan Aujla', 'Cigarettes After Sex'],
+    currentRotation: 'Fred again.. - adore u',
+    audioAura: 'Late-Night Lo-Fi / Electronic',
+    badges: ['🔥 Night Owl 15x', '⚡ Quest Host LVL 3', '🏸 Badminton Ace', '☕ Chai Connoisseur'],
+    bioManifesto: 'Proof of work > CGPA. Catch me at Gate 2 or building autonomous trading engines.'
+  },
+  {
+    id: 'user-sneha',
+    handle: 'sneha.ui',
+    fullName: 'Sneha Patel',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    city: 'Bengaluru',
+    karmaScore: 98,
+    questsCompleted: 22,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'F',
+    spotifyTopArtists: ['Laufey', 'Billie Eilish', 'Taylor Swift', 'Leon Bridges'],
+    currentRotation: 'Laufey - From The Start',
+    audioAura: 'Matcha Jazz / Acoustic Sunset',
+    badges: ['🌸 Girls-Only Host', '🎨 Figma Wizard', '🧋 Boba Scout'],
+    bioManifesto: 'Crafting minimalist interfaces by day, hunting rooftop cafes by night.'
+  },
+  {
+    id: 'user-aarav',
+    handle: 'aarav.dev',
+    fullName: 'Aarav Sharma',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    city: 'Bengaluru',
+    karmaScore: 94,
+    questsCompleted: 18,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'M',
+    spotifyTopArtists: ['Peggy Gou', 'Overmono', 'Four Tet', 'Bicep'],
+    currentRotation: 'Overmono - Good Lies',
+    audioAura: 'High-Tempo UK Garage / Coffee',
+    badges: ['🔥 Night Owl 15x', '🏸 Badminton Ace', '⚡ Quest Host LVL 2'],
+    bioManifesto: 'Late night commits and 2v2 turf matches in Koramangala.'
+  },
+  {
+    id: 'user-tanvi',
+    handle: 'tanvi.film',
+    fullName: 'Tanvi Shah',
+    avatarUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80',
+    city: 'Mumbai',
+    karmaScore: 96,
+    questsCompleted: 16,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'F',
+    spotifyTopArtists: ['Prateek Kuhad', 'Anuv Jain', 'The Local Train'],
+    currentRotation: 'The Local Train - Choona',
+    audioAura: 'Indie Rock / Carter Road Breeze',
+    badges: ['🌸 Girls-Only Host', '📸 35mm Analog', '🌊 Carter Road Local'],
+    bioManifesto: 'Shooting street film on Carter Road promenade and hunting cutting chai.'
+  },
+  {
+    id: 'user-rohan',
+    handle: 'rohan.ai',
+    fullName: 'Rohan Verma',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    city: 'Delhi-NCR',
+    karmaScore: 91,
+    questsCompleted: 12,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'M',
+    spotifyTopArtists: ['Hans Zimmer', 'Max Richter', 'Aphex Twin'],
+    currentRotation: 'Aphex Twin - #3',
+    audioAura: 'Deep Focus Ambient / Coding',
+    badges: ['💻 Vibe Coder', '☕ Filter Coffee Fanatic'],
+    bioManifesto: 'Reading papers at Cyber Hub cafes. Down for spontaneous code sprints.'
+  },
+  {
+    id: 'user-kavya',
+    handle: 'kavya.badm',
+    fullName: 'Kavya Rao',
+    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    city: 'Bengaluru',
+    karmaScore: 98,
+    questsCompleted: 24,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'F',
+    spotifyTopArtists: ['Dua Lipa', 'Charli xcx', 'Peggy Gou'],
+    currentRotation: 'Charli xcx - 360',
+    audioAura: 'High-BPM Cardio / Synth Pop',
+    badges: ['🏸 Badminton Ace', '⚡ 100% Show-Up', '🔥 Night Owl 15x'],
+    bioManifesto: 'Playing court matches across HSR and Koramangala. No flakes allowed.'
+  },
+  {
+    id: 'user-ananya',
+    handle: 'ananya.m',
+    fullName: 'Ananya Mehra',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    city: 'Mumbai',
+    karmaScore: 92,
+    questsCompleted: 11,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'F',
+    spotifyTopArtists: ['Laufey', 'Clairo', 'Beabadoobee'],
+    currentRotation: 'Clairo - Juna',
+    audioAura: 'Matcha Jazz / Coastal Sunset',
+    badges: ['🌸 Girls Only Safe Host', '☕ Specialty Brew'],
+    bioManifesto: 'Hosting safe chill walks on Carter Road and trying every matcha spot in Bandra.'
+  },
+  {
+    id: 'user-zoya',
+    handle: 'zoya.beats',
+    fullName: 'Zoya Akhtar',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    city: 'Pune',
+    karmaScore: 95,
+    questsCompleted: 14,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'F',
+    spotifyTopArtists: ['When Chai Met Toast', 'Yellow Diary', 'Prateek Kuhad'],
+    currentRotation: 'When Chai Met Toast - Joy of Little Things',
+    audioAura: 'Acoustic Indie / Lane 7 KP',
+    badges: ['🎸 Jam Leader', '☕ Chai Connoisseur'],
+    bioManifesto: 'Acoustic guitarist hunting spontaneous cafe jam lobbies in Koregaon Park.'
+  },
+  {
+    id: 'user-kabir',
+    handle: 'kabir.run',
+    fullName: 'Kabir Bakshi',
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    city: 'Delhi-NCR',
+    karmaScore: 97,
+    questsCompleted: 19,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'M',
+    spotifyTopArtists: ['Karan Aujla', 'Diljit Dosanjh', 'AP Dhillon'],
+    currentRotation: 'Karan Aujla - Winning Speech',
+    audioAura: 'High-BPM Punjabi Beats / 5K Sprint',
+    badges: ['🏃‍♂️ 5K Pacer', '⚡ 100% Show-Up'],
+    bioManifesto: 'Morning pace runs around Hauz Khas Lake followed by Blue Tokai iced brew.'
+  }
+];
+
+// Random Persona Generator for instant zero-friction new users
+const RANDOM_HANDLES = [
+  'chai.nomad', 'lofi.coder', 'bandra.runner', 'koramangala.pilot', 
+  'turf.ace', 'cyber.hustler', 'matcha.scout', 'vinyl.curator',
+  'indie.synthesizer', '3am.builder', 'hkv.flaneur', 'filtercoffee.dev'
+];
+
+const RANDOM_NAMES = [
+  'Aryan Sen', 'Diya Kapoor', 'Meera Nair', 'Kabir Roy', 
+  'Ananya Deshmukh', 'Vihaan Joshi', 'Rhea Singhania', 'Aditya Verma'
+];
+
+const RANDOM_ROTATIONS = [
+  'Fred again.. - adore u', 'Laufey - From The Start', 'Overmono - Good Lies',
+  'The Local Train - Choo Lo', 'Peggy Gou - (It Goes Like) Nanana',
+  'Charli xcx - 360', 'Karan Aujla - Softly', 'Aphex Twin - #3'
+];
+
+const RANDOM_AURAS = [
+  'Late-Night Lo-Fi / Electronic', 'Matcha Jazz / Sunset Acoustic',
+  'High-Tempo UK Garage / Coffee', 'Deep Focus Ambient / Coding',
+  'Indie Rock / Coastal Breeze', 'High-BPM Cardio / Synth Pop'
+];
+
+const RANDOM_AVATARS = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80'
+];
+
+export function generateRandomPersona(city: string = 'Bengaluru'): UserProfile {
+  const rand = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const num = Math.floor(100 + Math.random() * 900);
+  const handleBase = rand(RANDOM_HANDLES);
+  const handle = `${handleBase}.${num}`;
+  const fullName = rand(RANDOM_NAMES);
+  const avatarUrl = rand(RANDOM_AVATARS);
+  const rotation = rand(RANDOM_ROTATIONS);
+  const aura = rand(RANDOM_AURAS);
+
+  return {
+    id: `user-${Date.now().toString().slice(-6)}`,
+    handle,
+    fullName,
+    avatarUrl,
+    city,
+    karmaScore: 100,
+    questsCompleted: 0,
+    flakeRate: 0,
+    isVerified: true,
+    gender: 'M',
+    spotifyTopArtists: [rotation.split(' - ')[0], 'Fred again..', 'The Local Train'],
+    currentRotation: rotation,
+    audioAura: aura,
+    badges: ['⚡ New Explorer', '🔥 100% Show-Up'],
+    bioManifesto: 'Spontaneous sidequest explorer. Down for chai, sports turf, or hacking.'
+  };
+}
+
+

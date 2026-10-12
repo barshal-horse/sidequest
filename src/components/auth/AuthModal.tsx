@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { 
-  X, Zap, Sparkles, Check, ArrowRight, User, Music, ShieldCheck, Cloud 
+  X, Zap, Sparkles, Check, ArrowRight, User, Music, ShieldCheck, Cloud, Dices, UserPlus 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { generateRandomPersona } from '@/lib/constants';
+import { playCheckInChime, playRadarBlip } from '@/lib/audio';
 
 const AVATAR_OPTIONS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
@@ -23,9 +25,11 @@ export default function AuthModal() {
     setAuthModalOpen, 
     currentUser, 
     updateProfile, 
+    loginUser,
     selectedCity 
   } = useSideQuestStore();
 
+  const [mode, setMode] = useState<'edit' | 'create'>('create');
   const [handle, setHandle] = useState(currentUser.handle || 'pilot');
   const [fullName, setFullName] = useState(currentUser.fullName || 'Explorer');
   const [gender, setGender] = useState<'M' | 'F' | 'OTHER'>(currentUser.gender || 'M');
@@ -37,23 +41,57 @@ export default function AuthModal() {
 
   if (!isAuthModalOpen) return null;
 
+  const handleRollRandom = () => {
+    playRadarBlip();
+    const persona = generateRandomPersona(selectedCity.name);
+    setHandle(persona.handle);
+    setFullName(persona.fullName);
+    setSelectedAvatar(persona.avatarUrl);
+    setBio(persona.bioManifesto || '');
+    setCurrentSong(persona.currentRotation || '');
+    setGender(persona.gender || 'M');
+  };
+
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     if (!handle.trim()) return;
 
-    updateProfile({
-      handle: handle.trim().replace('@', ''),
-      fullName: fullName.trim() || handle.trim(),
-      avatarUrl: selectedAvatar,
-      gender,
-      bioManifesto: bio,
-      currentRotation: currentSong,
-      city: selectedCity.name
-    });
+    if (mode === 'create') {
+      const newIndividual = {
+        id: `user-${Date.now().toString().slice(-6)}`,
+        handle: handle.trim().replace('@', ''),
+        fullName: fullName.trim() || handle.trim(),
+        avatarUrl: selectedAvatar,
+        gender,
+        bioManifesto: bio,
+        currentRotation: currentSong,
+        city: selectedCity.name,
+        karmaScore: 100,
+        questsCompleted: 0,
+        flakeRate: 0,
+        isVerified: true,
+        badges: ['⚡ New Explorer', '🔥 100% Show-Up'],
+        spotifyTopArtists: [currentSong.split(' - ')[0] || 'Fred again..'],
+        audioAura: 'Custom Taste Graph'
+      };
+      loginUser(newIndividual);
+      playCheckInChime();
+    } else {
+      updateProfile({
+        handle: handle.trim().replace('@', ''),
+        fullName: fullName.trim() || handle.trim(),
+        avatarUrl: selectedAvatar,
+        gender,
+        bioManifesto: bio,
+        currentRotation: currentSong,
+        city: selectedCity.name
+      });
+      playRadarBlip();
+    }
 
     confetti({
-      particleCount: 50,
-      spread: 60,
+      particleCount: 60,
+      spread: 70,
       colors: ['#CCFF00', '#00F0FF', '#FFFFFF']
     });
 
@@ -95,12 +133,51 @@ export default function AuthModal() {
           </button>
         </div>
 
-        {/* Zero-Hassle Banner */}
-        <div className="p-3 rounded-xl bg-[#141418] border border-[#24242B] my-3 flex items-center justify-between text-xs font-mono">
-          <div className="flex items-center gap-2 text-[#8E8E9F]">
-            <span className="text-[#CCFF00]">✓</span> Auto-saved to browser storage
+        {/* Mode Selector Tabs */}
+        <div className="grid grid-cols-2 gap-1 p-1 bg-[#141418] rounded-xl border border-[#24242B] my-3">
+          <button
+            type="button"
+            onClick={() => setMode('create')}
+            className={`py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mode === 'create' 
+                ? 'bg-[#CCFF00] text-[#0A0A0C] shadow-[0_0_10px_rgba(204,255,0,0.3)]' 
+                : 'text-[#8E8E9F] hover:text-[#F4F4F6]'
+            }`}
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>+ New Individual</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMode('edit')}
+            className={`py-1.5 px-2 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mode === 'edit' 
+                ? 'bg-[#CCFF00] text-[#0A0A0C] shadow-[0_0_10px_rgba(204,255,0,0.3)]' 
+                : 'text-[#8E8E9F] hover:text-[#F4F4F6]'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Edit Current</span>
+          </button>
+        </div>
+
+        {/* Zero-Hassle & Randomize Quick Bar */}
+        <div className="p-3 rounded-xl bg-[#141418] border border-[#24242B] mb-3 flex items-center justify-between text-xs font-mono">
+          <div className="flex items-center gap-1.5 text-[#8E8E9F]">
+            <span className="text-[#CCFF00]">✓</span> 
+            <span>{mode === 'create' ? '0 Friction • No Passwords' : 'Saved to browser storage'}</span>
           </div>
-          <span className="text-[10px] text-[#CCFF00] font-bold">100% NO PASSWORDS</span>
+
+          <button
+            type="button"
+            onClick={handleRollRandom}
+            className="px-2.5 py-1 rounded-lg bg-[#1B1B22] hover:bg-[#24242B] border border-[#24242B] hover:border-[#CCFF00] text-[#CCFF00] text-[11px] font-bold flex items-center gap-1 transition-colors"
+            title="Randomize handle, avatar, and rotation"
+          >
+            <Dices className="w-3 h-3" />
+            <span>🎲 Randomize</span>
+          </button>
         </div>
 
         {/* Profile Edit Form */}
@@ -197,12 +274,12 @@ export default function AuthModal() {
             </div>
           </div>
 
-          {/* Save Button */}
+          {/* Save / Launch Button */}
           <button
             type="submit"
             className="w-full py-2.5 rounded-xl bg-[#CCFF00] hover:bg-[#b8e600] text-[#0A0A0C] font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_16px_rgba(204,255,0,0.3)] transition-all"
           >
-            Save Profile & Vibe <Check className="w-4 h-4" />
+            {mode === 'create' ? '✨ Launch New Explorer Identity' : 'Save Profile Changes'} <Check className="w-4 h-4" />
           </button>
         </form>
 

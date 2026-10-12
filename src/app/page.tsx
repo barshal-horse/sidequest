@@ -10,9 +10,11 @@ import DropModal from '@/components/drops/DropModal';
 import CreateDropSheet from '@/components/drops/CreateDropSheet';
 import ShareModal from '@/components/drops/ShareModal';
 import AuthModal from '@/components/auth/AuthModal';
+import MemberProfileModal from '@/components/profile/MemberProfileModal';
 import { 
-  Compass, ListFilter, User, Zap, ChevronDown 
+  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX 
 } from 'lucide-react';
+import { playGlideWhoosh, playRadarBlip } from '@/lib/audio';
 
 // Dynamic import with SSR disabled for MapLibre WebGL canvas
 const MetroMap = dynamic(() => import('@/components/map/MetroMap'), {
@@ -36,10 +38,22 @@ export default function Home() {
     activeTab,
     setActiveTab,
     setCreateSheetOpen,
-    drops
+    drops,
+    soundEnabled,
+    toggleSound
   } = useSideQuestStore();
 
   const cityDropsCount = drops.filter(d => d.cityId === selectedCity.id).length;
+
+  const handleTabChange = (tab: 'radar' | 'quests' | 'profile') => {
+    playGlideWhoosh();
+    setActiveTab(tab);
+  };
+
+  const handleCityChange = (cityId: string) => {
+    playRadarBlip();
+    setSelectedCity(cityId);
+  };
 
   return (
     <main className="relative flex flex-col h-screen w-screen overflow-hidden bg-[#0A0A0C] text-[#F4F4F6]">
@@ -57,7 +71,7 @@ export default function Home() {
             <div className="relative group">
               <select
                 value={selectedCity.id}
-                onChange={e => setSelectedCity(e.target.value)}
+                onChange={e => handleCityChange(e.target.value)}
                 className="appearance-none pl-2.5 pr-6 py-1 rounded-full bg-[#141418] border border-[#24242B] text-xs font-mono text-[#F4F4F6] hover:border-[#CCFF00] transition-colors cursor-pointer outline-none"
               >
                 {METRO_CITIES.map(city => (
@@ -70,8 +84,20 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Active Flares Telemetry Pill */}
+          {/* Right Header Area: Audio Synth Toggle & Telemetry Pill */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggleSound}
+              className={`p-1.5 rounded-full border transition-all flex items-center justify-center ${
+                soundEnabled 
+                  ? 'border-[#CCFF00]/40 bg-[#CCFF00]/10 text-[#CCFF00] hover:scale-105 shadow-[0_0_8px_rgba(204,255,0,0.2)]' 
+                  : 'border-[#24242B] bg-[#141418] text-[#8E8E9F] hover:text-[#F4F4F6]'
+              }`}
+              title={soundEnabled ? 'Mute Web Audio Synth Sound FX' : 'Enable Web Audio Synth Sound FX'}
+            >
+              {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            </button>
+
             <div className="px-2.5 py-0.5 rounded-full bg-[#CCFF00]/10 border border-[#CCFF00]/30 text-[#CCFF00] font-mono font-bold text-[11px] flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-ping" />
               🔥 {cityDropsCount} FLARES
@@ -170,7 +196,7 @@ export default function Home() {
         
         {/* Radar Tab */}
         <button
-          onClick={() => setActiveTab('radar')}
+          onClick={() => handleTabChange('radar')}
           className={`flex flex-col items-center gap-0.5 text-[10px] font-mono transition-colors ${
             activeTab === 'radar' ? 'text-[#CCFF00] font-bold' : 'text-[#8E8E9F] hover:text-[#F4F4F6]'
           }`}
@@ -189,7 +215,7 @@ export default function Home() {
 
         {/* Quests Feed Tab */}
         <button
-          onClick={() => setActiveTab('quests')}
+          onClick={() => handleTabChange('quests')}
           className={`flex flex-col items-center gap-0.5 text-[10px] font-mono transition-colors ${
             activeTab === 'quests' ? 'text-[#CCFF00] font-bold' : 'text-[#8E8E9F] hover:text-[#F4F4F6]'
           }`}
@@ -200,7 +226,7 @@ export default function Home() {
 
         {/* Bento Profile Tab */}
         <button
-          onClick={() => setActiveTab('profile')}
+          onClick={() => handleTabChange('profile')}
           className={`flex flex-col items-center gap-0.5 text-[10px] font-mono transition-colors ${
             activeTab === 'profile' ? 'text-[#CCFF00] font-bold' : 'text-[#8E8E9F] hover:text-[#F4F4F6]'
           }`}
@@ -215,6 +241,7 @@ export default function Home() {
       <CreateDropSheet />
       <ShareModal />
       <AuthModal />
+      <MemberProfileModal />
     </main>
   );
 }

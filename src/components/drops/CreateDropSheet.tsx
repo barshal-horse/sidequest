@@ -5,6 +5,7 @@ import { useSideQuestStore } from '@/lib/store';
 import { DropCategory } from '@/types';
 import { X, Zap, Clock, Users, Shield, MapPin, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { playCheckInChime } from '@/lib/audio';
 
 export default function CreateDropSheet() {
   const { 
@@ -46,6 +47,8 @@ export default function CreateDropSheet() {
       tags: [category.replace('_', ' '), selectedCity.name],
       aiVibeNote: `High-energy spontaneous squad in ${selectedCity.name}. Gather at ${venueName} before timer expires!`
     });
+
+    playCheckInChime();
 
     confetti({
       particleCount: 60,

@@ -2,24 +2,34 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useSideQuestStore } from '@/lib/store';
-import { Crosshair, Plus, Minus, Radio, Compass, Layers } from 'lucide-react';
+import { Crosshair, Plus, Minus, Radio, Compass, Layers, Navigation, Sparkles } from 'lucide-react';
+import { METRO_CITIES } from '@/lib/constants';
+import { findClosestMetro } from '@/lib/geo';
+import { playRadarBlip, playGlideWhoosh } from '@/lib/audio';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 export default function MetroMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const userMarkerRef = useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
   const [coordsReadout, setCoordsReadout] = useState<string>('');
   const [is3DMode, setIs3DMode] = useState(true);
+  const [isLocating, setIsLocating] = useState(false);
+  const [gpsToast, setGpsToast] = useState<string | null>(null);
 
   const {
     selectedCity,
+    setSelectedCity,
     selectedCategory,
     isGirlsOnlyFilter,
     drops,
     activeDropId,
-    setActiveDropId
+    setActiveDropId,
+    userLocation,
+    setUserLocation,
+    currentUser
   } = useSideQuestStore();
 
   // Initialize MapLibre GL 3D Vector Canvas (OpenFreeMap 100% Free, Zero Keys, Zero Watermarks)
@@ -115,6 +125,10 @@ export default function MetroMap() {
       isMounted = false;
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -135,6 +149,123 @@ export default function MetroMap() {
       essential: true
     });
   }, [selectedCity, mapReady, is3DMode]);
+
+  // Render Dynamic User Position Beacon Marker
+  useEffect(() => {
+    if (!mapRef.current || !mapReady) return;
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.remove();
+      userMarkerRef.current = null;
+    }
+
+    if (!userLocation) return;
+
+    import('maplibre-gl').then(({ Marker }) => {
+      if (!mapRef.current) return;
+
+      const el = document.createElement('div');
+      el.className = 'group cursor-pointer select-none';
+      el.style.transform = 'translate(-50%, -50%)';
+
+      el.innerHTML = `
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+          <!-- Pulsing Cyan Radar Sonar Ring -->
+          <div style="position: absolute; top: -6px; width: 48px; height: 48px; border-radius: 9999px; border: 2.5px solid #00F0FF; background: rgba(0,240,255,0.18); animation: beacon-ping 1.8s cubic-bezier(0,0,0.2,1) infinite;"></div>
+          
+          <!-- Luminous Core -->
+          <div style="position: relative; z-index: 15; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 9999px; background: #0E0E12; border: 2.5px solid #00F0FF; box-shadow: 0 0 18px rgba(0,240,255,0.85);">
+            <img src="${currentUser.avatarUrl}" style="width: 24px; height: 24px; border-radius: 9999px; object-fit: cover;" />
+          </div>
+
+          <!-- Glassmorphism Live Tag -->
+          <div style="position: relative; z-index: 15; margin-top: 4px; padding: 2px 7px; border-radius: 9999px; background: rgba(14,14,18,0.95); border: 1px solid #00F0FF; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.8);">
+            <span style="width: 5px; height: 5px; border-radius: 9999px; background: #00F0FF;"></span>
+            <span style="font-size: 9px; font-family: monospace; font-weight: 800; color: #00F0FF; white-space: nowrap;">
+              YOU ARE HERE (@${currentUser.handle})
+            </span>
+          </div>
+        </div>
+      `;
+
+      el.addEventListener('click', () => {
+        playRadarBlip();
+        mapRef.current?.flyTo({
+          center: [userLocation.lng, userLocation.lat],
+          zoom: 16.5,
+          pitch: 58,
+          duration: 900
+        });
+      });
+
+      const marker = new Marker({ element: el })
+        .setLngLat([userLocation.lng, userLocation.lat])
+        .addTo(mapRef.current);
+
+      userMarkerRef.current = marker;
+    });
+  }, [userLocation, mapReady, currentUser]);
+
+  // Handle GPS Locate Me
+  const handleLocateMe = () => {
+    setIsLocating(true);
+    playRadarBlip();
+
+    if (!navigator.geolocation) {
+      applySimulatedGps('Geolocation not supported in browser. Dropping simulated GPS in Koramangala.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsLocating(false);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setUserLocation({ lat, lng });
+        playGlideWhoosh();
+
+        const closest = findClosestMetro(lat, lng, METRO_CITIES);
+        if (closest.city.id !== selectedCity.id) {
+          setSelectedCity(closest.city.id);
+          setGpsToast(`GPS Locked! Auto-switched to closest metro: ${closest.city.name} (${(closest.distanceMeters / 1000).toFixed(0)}km away)`);
+        } else {
+          setGpsToast(`GPS Locked! You are in ${closest.city.name}`);
+        }
+        setTimeout(() => setGpsToast(null), 4500);
+
+        mapRef.current?.flyTo({
+          center: [lng, lat],
+          zoom: 16.2,
+          pitch: is3DMode ? 56 : 0,
+          bearing: -10,
+          duration: 1500
+        });
+      },
+      (err) => {
+        setIsLocating(false);
+        applySimulatedGps(`GPS unavailable: Pinpointed simulated hotspot in ${selectedCity.name}.`);
+      },
+      { timeout: 7000, enableHighAccuracy: true }
+    );
+  };
+
+  const applySimulatedGps = (message: string) => {
+    setIsLocating(false);
+    const hotspot = selectedCity.hotspots[0] || { lat: selectedCity.center[1], lng: selectedCity.center[0], name: selectedCity.name };
+    const simLat = hotspot.lat + 0.0012;
+    const simLng = hotspot.lng + 0.0015;
+    setUserLocation({ lat: simLat, lng: simLng });
+    setGpsToast(message);
+    setTimeout(() => setGpsToast(null), 4500);
+    playGlideWhoosh();
+
+    mapRef.current?.flyTo({
+      center: [simLng, simLat],
+      zoom: 16.2,
+      pitch: is3DMode ? 56 : 0,
+      duration: 1200
+    });
+  };
 
   // Filter Drops
   const filteredDrops = drops.filter(drop => {
@@ -305,8 +436,29 @@ export default function MetroMap() {
         <span className="text-[#CCFF00] pl-1 font-bold">{is3DMode ? '3D' : '2D'}</span>
       </div>
 
+      {/* GPS Status Toast */}
+      {gpsToast && (
+        <div className="absolute top-14 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md z-30 p-2.5 rounded-xl bg-[#0E0E12]/95 border border-[#00F0FF]/50 text-xs font-mono text-[#00F0FF] flex items-center gap-2 shadow-2xl backdrop-blur-md animate-fade-in">
+          <Sparkles className="w-4 h-4 text-[#CCFF00] flex-shrink-0" />
+          <span className="leading-tight">{gpsToast}</span>
+        </div>
+      )}
+
       {/* Floating HUD Controls (Right Side) */}
       <div className="absolute right-4 bottom-20 z-20 flex flex-col gap-1.5">
+        <button
+          onClick={handleLocateMe}
+          disabled={isLocating}
+          className={`w-9 h-9 rounded-lg backdrop-blur-md border flex items-center justify-center transition-all shadow-lg ${
+            userLocation
+              ? 'bg-[#00F0FF] text-[#0A0A0C] border-[#00F0FF] shadow-[0_0_14px_rgba(0,240,255,0.45)]'
+              : 'bg-[#0E0E12]/90 text-[#8E8E9F] border-[#24242B] hover:text-[#00F0FF] hover:border-[#00F0FF]'
+          }`}
+          title="Locate Me / GPS Radar Beacon"
+        >
+          <Navigation className={`w-4 h-4 ${isLocating ? 'animate-spin text-[#00F0FF]' : ''}`} />
+        </button>
+
         <button
           onClick={toggle3D}
           className={`w-9 h-9 rounded-lg backdrop-blur-md border flex items-center justify-center font-mono text-xs font-bold transition-all shadow-lg ${

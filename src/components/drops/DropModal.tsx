@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { calculateDistanceInMeters, formatDistance, CHECKIN_GEOFENCE_RADIUS_METERS } from '@/lib/geo';
+import { DEMO_PROFILES } from '@/lib/constants';
+import { playRadarBlip, playCheckInChime } from '@/lib/audio';
+import { DropMember } from '@/types';
 
 export default function DropModal() {
   const { 
@@ -19,7 +22,8 @@ export default function DropModal() {
     leaveDrop, 
     checkInDrop, 
     openShareModal,
-    selectedCity
+    selectedCity,
+    setInspectedMember
   } = useSideQuestStore();
 
   const [messageText, setMessageText] = useState('');
@@ -125,8 +129,36 @@ export default function DropModal() {
     );
   };
 
+  const handleMemberClick = (member: DropMember) => {
+    const profile = DEMO_PROFILES.find(p => p.id === member.userId || p.handle === member.handle) || {
+      id: member.userId,
+      handle: member.handle,
+      fullName: member.fullName,
+      avatarUrl: member.avatarUrl,
+      city: selectedCity.name,
+      karmaScore: 96,
+      questsCompleted: 14,
+      flakeRate: 0,
+      isVerified: true,
+      badges: ['⚡ Squad Member', '🔥 100% Show-Up'],
+      currentRotation: 'Fred again.. - adore u',
+      audioAura: 'Electronic / Night Owl',
+      bioManifesto: 'Lobby verified squad member.'
+    };
+    playRadarBlip();
+    setInspectedMember(profile);
+  };
+
+  const handleJoinSquad = () => {
+    const success = joinDrop(drop.id);
+    if (success) {
+      playCheckInChime();
+    }
+  };
+
   const triggerSuccessfulCheckIn = () => {
     checkInDrop(drop.id);
+    playCheckInChime();
     setGpsError(null);
     confetti({
       particleCount: 100,
@@ -214,10 +246,19 @@ export default function DropModal() {
 
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {drop.members.map(member => (
-                <div key={member.userId} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1B1B22] border border-[#24242B]">
-                  <img src={member.avatarUrl} alt={member.handle} className="w-6 h-6 rounded-full object-cover" />
+                <div 
+                  key={member.userId} 
+                  onClick={() => handleMemberClick(member)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1B1B22] border border-[#24242B] hover:border-[#00F0FF] transition-all cursor-pointer group/member select-none"
+                  title="Click to inspect member's taste graph"
+                >
+                  <img 
+                    src={member.avatarUrl} 
+                    alt={member.handle} 
+                    className="w-6 h-6 rounded-full object-cover group-hover/member:ring-1 group-hover/member:ring-[#00F0FF]" 
+                  />
                   <div className="flex flex-col">
-                    <span className="text-xs font-mono text-[#F4F4F6] leading-none">
+                    <span className="text-xs font-mono text-[#F4F4F6] group-hover/member:text-[#00F0FF] transition-colors leading-none flex items-center gap-1">
                       @{member.handle.split('.')[0]} {member.isHost && '👑'}
                     </span>
                     {member.checkedIn && (
@@ -231,7 +272,7 @@ export default function DropModal() {
 
               {!isMember && drop.currentSlots < drop.maxSlots && (
                 <button
-                  onClick={() => joinDrop(drop.id)}
+                  onClick={handleJoinSquad}
                   className="px-3 py-1.5 rounded-lg border border-dashed border-[#CCFF00] text-[#CCFF00] text-xs font-mono hover:bg-[#CCFF00]/10 transition-colors flex items-center gap-1 whitespace-nowrap"
                 >
                   + Join Squad
@@ -360,7 +401,7 @@ export default function DropModal() {
             )
           ) : (
             <button
-              onClick={() => joinDrop(drop.id)}
+              onClick={handleJoinSquad}
               disabled={drop.currentSlots >= drop.maxSlots}
               className="flex-1 py-2.5 rounded-lg bg-[#CCFF00] text-[#0A0A0C] font-mono font-bold text-xs hover:bg-[#b8e600] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >

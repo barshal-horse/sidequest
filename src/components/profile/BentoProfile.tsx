@@ -4,12 +4,21 @@ import React, { useState } from 'react';
 import { useSideQuestStore } from '@/lib/store';
 import { 
   ShieldCheck, Sparkles, Music, Flame, Zap, Award, 
-  Share2, Check, ExternalLink 
+  Share2, Check, ExternalLink, Dices, UserPlus, Users 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { DEMO_PROFILES, generateRandomPersona } from '@/lib/constants';
+import { playRadarBlip, playCheckInChime } from '@/lib/audio';
 
 export default function BentoProfile() {
-  const { currentUser, setCreateSheetOpen, setAuthModalOpen, logoutUser } = useSideQuestStore();
+  const { 
+    currentUser, 
+    setCreateSheetOpen, 
+    setAuthModalOpen, 
+    switchProfile,
+    resetToNewIndividual,
+    selectedCity
+  } = useSideQuestStore();
   const [copied, setCopied] = useState(false);
 
   const handleShareStory = () => {
@@ -22,9 +31,90 @@ export default function BentoProfile() {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleRandomize = () => {
+    playCheckInChime();
+    confetti({
+      particleCount: 60,
+      spread: 70,
+      colors: ['#CCFF00', '#00F0FF', '#FF0055']
+    });
+    resetToNewIndividual();
+  };
+
+  const handleSwitch = (profile: typeof DEMO_PROFILES[0]) => {
+    playRadarBlip();
+    switchProfile(profile);
+  };
+
   return (
     <div className="w-full max-w-lg mx-auto p-4 sm:p-5 space-y-4 pb-24 animate-fade-in">
       
+      {/* Persona & Identity Switcher Hub */}
+      <div className="p-3.5 rounded-2xl bg-[#141418] border border-[#24242B] space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8E8E9F]">
+            <Users className="w-3.5 h-3.5 text-[#CCFF00]" />
+            <span>SWITCH IDENTITY / PERSONA</span>
+          </div>
+          <span className="text-[10px] font-mono text-[#00F0FF] bg-[#00F0FF]/10 px-2 py-0.5 rounded-full border border-[#00F0FF]/30">
+            TEST SQUAD PERSPECTIVES
+          </span>
+        </div>
+
+        {/* Horizontal Persona Avatars */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          {DEMO_PROFILES.map((profile) => {
+            const isCurrent = currentUser.id === profile.id;
+            return (
+              <button
+                key={profile.id}
+                onClick={() => handleSwitch(profile)}
+                className={`flex-shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-left transition-all ${
+                  isCurrent 
+                    ? 'bg-[#CCFF00]/15 border-[#CCFF00] shadow-[0_0_12px_rgba(204,255,0,0.3)]' 
+                    : 'bg-[#1B1B22] border-[#24242B] hover:border-[#CCFF00]/60 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <img 
+                  src={profile.avatarUrl} 
+                  alt={profile.handle} 
+                  className={`w-6 h-6 rounded-full object-cover border ${isCurrent ? 'border-[#CCFF00]' : 'border-transparent'}`} 
+                />
+                <div className="flex flex-col pr-1">
+                  <span className={`text-[11px] font-mono font-bold leading-none ${isCurrent ? 'text-[#CCFF00]' : 'text-[#F4F4F6]'}`}>
+                    @{profile.handle.split('.')[0]}
+                  </span>
+                  <span className="text-[9px] font-mono text-[#8E8E9F] mt-0.5">
+                    {profile.city}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Quick Action Buttons for New Personas */}
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <button
+            onClick={handleRandomize}
+            className="py-1.5 px-3 rounded-lg bg-[#1B1B22] hover:bg-[#24242B] border border-[#24242B] text-xs font-mono text-[#F4F4F6] hover:text-[#CCFF00] flex items-center justify-center gap-1.5 transition-colors"
+            title="Roll random handle, avatar, and vibe"
+          >
+            <Dices className="w-3.5 h-3.5 text-[#CCFF00]" />
+            <span>🎲 Randomize New</span>
+          </button>
+
+          <button
+            onClick={() => setAuthModalOpen(true, 'create new custom persona')}
+            className="py-1.5 px-3 rounded-lg bg-[#CCFF00]/10 hover:bg-[#CCFF00]/20 border border-[#CCFF00]/40 text-xs font-mono text-[#CCFF00] flex items-center justify-center gap-1.5 transition-colors"
+            title="Create your own custom name, handle & avatar"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>+ Create Custom</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Profile Header */}
       <div className="p-4 rounded-2xl bg-[#141418] border border-[#24242B] flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -42,13 +132,13 @@ export default function BentoProfile() {
               <h2 className="text-base font-bold text-[#F4F4F6] font-mono">@{currentUser.handle}</h2>
               <ShieldCheck className="w-4 h-4 text-[#CCFF00]" />
             </div>
-            <p className="text-xs font-mono text-[#8E8E9F]">{currentUser.city} // Tech Explorer</p>
+            <p className="text-xs font-mono text-[#8E8E9F]">{currentUser.fullName} • {currentUser.city}</p>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#CCFF00]/15 text-[#CCFF00] border border-[#CCFF00]/30 font-bold">
-                LEVEL 07 EXPLORER
+                {currentUser.gender === 'F' ? '🌸 VERIFIED FEMALE' : 'LEVEL 07 EXPLORER'}
               </span>
               <span className="text-[10px] font-mono text-[#8E8E9F]">
-                1,420 XP
+                {currentUser.questsCompleted} Quests
               </span>
             </div>
           </div>

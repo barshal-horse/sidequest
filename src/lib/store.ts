@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Drop, MetroCity, DropCategory, UserProfile } from '@/types';
-import { METRO_CITIES, INITIAL_DROPS } from './constants';
+import { Drop, MetroCity, DropCategory, UserProfile, UserLocation } from '@/types';
+import { METRO_CITIES, INITIAL_DROPS, generateRandomPersona } from './constants';
+import { toggleMuteSound } from './audio';
 
 const DEFAULT_USER: UserProfile = {
   id: 'user-harshal',
@@ -27,6 +28,9 @@ interface SideQuestStore {
   isGirlsOnlyFilter: boolean;
   drops: Drop[];
   currentUser: UserProfile;
+  userLocation: UserLocation | null;
+  inspectedMember: UserProfile | null;
+  soundEnabled: boolean;
   isAuthenticated: boolean;
   isAuthModalOpen: boolean;
   authModalReason: string | null;
@@ -41,6 +45,9 @@ interface SideQuestStore {
   setSelectedCategory: (cat: DropCategory | 'ALL') => void;
   toggleGirlsOnlyFilter: () => void;
   setActiveDropId: (id: string | null) => void;
+  setUserLocation: (loc: UserLocation | null) => void;
+  setInspectedMember: (member: UserProfile | null) => void;
+  toggleSound: () => boolean;
   setCreateSheetOpen: (open: boolean) => void;
   openShareModal: (drop: Drop) => void;
   closeShareModal: () => void;
@@ -49,6 +56,8 @@ interface SideQuestStore {
   loginUser: (userData: Partial<UserProfile>) => void;
   logoutUser: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
+  switchProfile: (profile: UserProfile) => void;
+  resetToNewIndividual: () => void;
   
   createDrop: (newDrop: Omit<Drop, 'id' | 'createdAt' | 'status' | 'currentSlots' | 'members'>) => Drop;
   joinDrop: (dropId: string) => boolean;
@@ -64,6 +73,9 @@ export const useSideQuestStore = create<SideQuestStore>()(
       isGirlsOnlyFilter: false,
       drops: INITIAL_DROPS,
       currentUser: DEFAULT_USER,
+      userLocation: null,
+      inspectedMember: null,
+      soundEnabled: true,
       isAuthenticated: true, // Pre-authenticated with default explorer profile, can switch anytime
       isAuthModalOpen: false,
       authModalReason: null,
@@ -85,6 +97,17 @@ export const useSideQuestStore = create<SideQuestStore>()(
       toggleGirlsOnlyFilter: () => set(state => ({ isGirlsOnlyFilter: !state.isGirlsOnlyFilter })),
       
       setActiveDropId: (id) => set({ activeDropId: id }),
+
+      setUserLocation: (loc) => set({ userLocation: loc }),
+
+      setInspectedMember: (member) => set({ inspectedMember: member }),
+
+      toggleSound: () => {
+        const isMuted = toggleMuteSound();
+        const soundOn = !isMuted;
+        set({ soundEnabled: soundOn });
+        return soundOn;
+      },
       
       setCreateSheetOpen: (open: boolean) => {
         set({ isCreateSheetOpen: open });
@@ -100,6 +123,22 @@ export const useSideQuestStore = create<SideQuestStore>()(
         isAuthModalOpen: open,
         authModalReason: reason || null
       }),
+
+      switchProfile: (profile: UserProfile) => {
+        set({
+          currentUser: profile,
+          isAuthenticated: true
+        });
+      },
+
+      resetToNewIndividual: () => {
+        const city = get().selectedCity.name;
+        const fresh = generateRandomPersona(city);
+        set({
+          currentUser: fresh,
+          isAuthenticated: true
+        });
+      },
 
       loginUser: (userData: Partial<UserProfile>) => {
         const id = userData.id || `user-${Date.now().toString().slice(-6)}`;
@@ -256,7 +295,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
       partialize: (state) => ({
         currentUser: state.currentUser,
         isAuthenticated: state.isAuthenticated,
-        selectedCity: state.selectedCity
+        selectedCity: state.selectedCity,
+        soundEnabled: state.soundEnabled
       })
     }
   )

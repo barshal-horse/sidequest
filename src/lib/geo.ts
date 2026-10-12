@@ -29,3 +29,30 @@ export function formatDistance(meters: number): string {
 
 // 500 meter geofence radius for legitimate venue check-ins
 export const CHECKIN_GEOFENCE_RADIUS_METERS = 500;
+
+export interface MetroCityCoord {
+  id: string;
+  name: string;
+  center: [number, number]; // [lng, lat]
+}
+
+// Find closest metro city based on GPS coordinates
+export function findClosestMetro<T extends MetroCityCoord>(
+  lat: number,
+  lon: number,
+  cities: T[]
+): { city: T; distanceMeters: number } {
+  let closest = cities[0];
+  let minDistance = calculateDistanceInMeters(lat, lon, closest.center[1], closest.center[0]);
+
+  for (let i = 1; i < cities.length; i++) {
+    const dist = calculateDistanceInMeters(lat, lon, cities[i].center[1], cities[i].center[0]);
+    if (dist < minDistance) {
+      minDistance = dist;
+      closest = cities[i];
+    }
+  }
+
+  return { city: closest, distanceMeters: minDistance };
+}
+

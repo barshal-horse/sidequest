@@ -17,6 +17,11 @@ export interface MetroCity {
   hotspots: Hotspot[];
 }
 
+export interface UserLocation {
+  lat: number;
+  lng: number;
+}
+
 export interface UserProfile {
   id: string;
   handle: string;
