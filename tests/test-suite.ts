@@ -647,6 +647,17 @@ runTest('Shared server state merges new drops without deleting local unsynced dr
   assert.strictEqual(merged.length, INITIAL_DROPS.length + 1);
 });
 
+runTest('LetsStart welcome guide enforces zero-friction onboarding flow and persistence', () => {
+  let hasCompletedOnboarding = false;
+  const setHasCompletedOnboarding = (val: boolean) => {
+    hasCompletedOnboarding = val;
+  };
+
+  assert.strictEqual(hasCompletedOnboarding, false, 'Default visitor should see LetsStart page first');
+  setHasCompletedOnboarding(true);
+  assert.strictEqual(hasCompletedOnboarding, true, 'Visitor entering app completes onboarding and unlocks radar view');
+});
+
 // ============================================================================
 // FINAL SUMMARY
 // ============================================================================

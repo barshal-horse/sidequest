@@ -16,10 +16,12 @@ import SpotifyConnectModal from '@/components/profile/SpotifyConnectModal';
 import ScrapbookModal from '@/components/profile/ScrapbookModal';
 import InstantPolaroidCamModal from '@/components/profile/InstantPolaroidCamModal';
 import SonarRadarSweep from '@/components/radar/SonarRadarSweep';
+import LetsStart from '@/components/onboarding/LetsStart';
 import { 
-  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX, Navigation, MapPin, Camera, Radio 
+  Compass, ListFilter, User, Zap, ChevronDown, Volume2, VolumeX, Navigation, MapPin, Camera, Radio, HelpCircle 
 } from 'lucide-react';
 import { playGlideWhoosh, playRadarBlip } from '@/lib/audio';
+import { trackEvent } from '@/lib/analytics';
 
 // Dynamic import with SSR disabled for MapLibre WebGL canvas
 const MetroMap = dynamic(() => import('@/components/map/MetroMap'), {
@@ -48,10 +50,13 @@ export default function Home() {
     toggleSound,
     userLocation,
     setLocationModalOpen,
-    setInstantCamOpen
+    setInstantCamOpen,
+    hasCompletedOnboarding,
+    setHasCompletedOnboarding
   } = useSideQuestStore();
 
   const [isGlobalSonarOpen, setIsGlobalSonarOpen] = React.useState(false);
+  const [showManualGuide, setShowManualGuide] = React.useState(false);
 
   const cityDropsCount = drops.filter(d => d.cityId === selectedCity.id).length;
 
@@ -179,6 +184,19 @@ export default function Home() {
             >
               <Camera className="w-3.5 h-3.5" />
               <span>Snap</span>
+            </button>
+
+            <button
+              onClick={() => {
+                playRadarBlip();
+                trackEvent('guide_opened');
+                setShowManualGuide(true);
+              }}
+              className="py-1 px-2.5 rounded-full border border-[#24242B] bg-[#141418] hover:border-[#CCFF00] text-[#8E8E9F] hover:text-[#CCFF00] font-mono text-[11px] font-bold flex items-center gap-1 transition-all"
+              title="Open SideQuest Rules & Guide"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Guide</span>
             </button>
 
             <button
@@ -371,6 +389,11 @@ export default function Home() {
       <ScrapbookModal />
       <InstantPolaroidCamModal />
       <SonarRadarSweep isOpen={isGlobalSonarOpen} onClose={() => setIsGlobalSonarOpen(false)} />
+
+      {/* "Let's Start" First-Visit & Guide Screen (No BS, Pure Spontaneity) */}
+      {(!hasCompletedOnboarding || showManualGuide) && (
+        <LetsStart onStart={() => setShowManualGuide(false)} />
+      )}
     </main>
   );
 }

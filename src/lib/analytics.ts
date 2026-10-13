@@ -16,7 +16,9 @@ export type SideQuestEventName =
   | 'city_switched'
   | 'profile_registered'
   | 'profile_updated'
-  | 'spotify_connected';
+  | 'spotify_connected'
+  | 'onboarding_completed'
+  | 'guide_opened';
 
 export interface AnalyticsProperties {
   city?: string;

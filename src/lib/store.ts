@@ -51,8 +51,10 @@ interface SideQuestStore {
   activeTab: 'radar' | 'quests' | 'profile';
   registeredProfiles: UserProfile[];
   recentCreatedDropCoords: { lat: number; lng: number; dropId: string } | null;
+  hasCompletedOnboarding: boolean;
   
   // Actions
+  setHasCompletedOnboarding: (completed: boolean) => void;
   syncWithServer: () => Promise<void>;
   clearRecentCreatedDropCoords: () => void;
   setSelectedCity: (cityId: string) => void;
@@ -117,7 +119,9 @@ export const useSideQuestStore = create<SideQuestStore>()(
       selectedShareDrop: null,
       activeTab: 'radar',
       recentCreatedDropCoords: null,
+      hasCompletedOnboarding: false,
 
+      setHasCompletedOnboarding: (completed: boolean) => set({ hasCompletedOnboarding: completed }),
       clearRecentCreatedDropCoords: () => set({ recentCreatedDropCoords: null }),
 
       syncWithServer: async () => {
@@ -667,7 +671,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
         soundEnabled: state.soundEnabled,
         userLocation: state.userLocation,
         dropChats: state.dropChats,
-        registeredProfiles: state.registeredProfiles
+        registeredProfiles: state.registeredProfiles,
+        hasCompletedOnboarding: state.hasCompletedOnboarding
       })
     }
   )
