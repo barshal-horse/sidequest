@@ -338,10 +338,18 @@ export default function MetroMap() {
           ? '#00F0FF'
           : '#CCFF00';
 
-        const categoryEmoji =
-          drop.category === 'CHAI_FOOD' ? '🧋' :
-          drop.category === 'SPORTS' ? '🏸' :
-          drop.category === 'COWORK_DEV' ? '💻' : '🎭';
+        const categorySvg =
+          drop.category === 'CHAI_FOOD'
+            ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${themeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"></path><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path><line x1="6" y1="2" x2="6" y2="4"></line><line x1="10" y1="2" x2="10" y2="4"></line><line x1="14" y1="2" x2="14" y2="4"></line></svg>`
+            : drop.category === 'SPORTS'
+            ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${themeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"></path><path d="m21 21-1-1"></path><path d="m3 3 1 1"></path><path d="m18 22 4-4"></path><path d="m2 6 4-4"></path><path d="m3 10 7-7"></path><path d="m14 21 7-7"></path></svg>`
+            : drop.category === 'COWORK_DEV'
+            ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${themeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"></path></svg>`
+            : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${themeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>`;
+
+        const girlsOnlySvg = drop.isGirlsOnly
+          ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FF007A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`
+          : '';
 
         // Spiderfy dispersion: if multiple drops share the same area/hotspot,
         // arrange them in a neat radial cluster so every flare is 100% visible and clickable
@@ -376,7 +384,7 @@ export default function MetroMap() {
             
             <!-- Neon Luminous Node Core -->
             <div style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9999px; background: #0E0E12; border: 2.5px solid ${themeColor}; box-shadow: 0 0 16px ${themeColor}AA; transform: ${isSelected ? 'scale(1.2)' : 'scale(1)'}; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);">
-              <span style="font-size: 14px; line-height: 1;">${categoryEmoji}</span>
+              ${categorySvg}
             </div>
 
             <!-- Sleek Glassmorphism Micro-HUD Pill -->
@@ -387,7 +395,7 @@ export default function MetroMap() {
               <span style="font-size: 9px; font-family: monospace; font-weight: 800; color: ${themeColor};">
                 ${drop.currentSlots}/${drop.maxSlots}
               </span>
-              ${drop.isGirlsOnly ? '<span style="font-size: 9px;">🌸</span>' : ''}
+              ${girlsOnlySvg}
             </div>
           </div>
         `;

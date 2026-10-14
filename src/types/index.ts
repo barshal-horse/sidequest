@@ -94,6 +94,8 @@ export interface Drop {
   createdAt: string;
   tags: string[];
   aiVibeNote?: string;
+  lastModified?: string;
+  isReported?: boolean;
 }
 
 export interface ChatMessage {

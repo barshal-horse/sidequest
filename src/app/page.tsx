@@ -8,6 +8,8 @@ import QuestsFeed from '@/components/drops/QuestsFeed';
 import BentoProfile from '@/components/profile/BentoProfile';
 import DropModal from '@/components/drops/DropModal';
 import CreateDropSheet from '@/components/drops/CreateDropSheet';
+import EditDropSheet from '@/components/drops/EditDropSheet';
+import DeleteDropDialog from '@/components/drops/DeleteDropDialog';
 import ShareModal from '@/components/drops/ShareModal';
 import AuthModal from '@/components/auth/AuthModal';
 import MemberProfileModal from '@/components/profile/MemberProfileModal';
@@ -381,6 +383,8 @@ export default function Home() {
       {/* Modals & Bottom Sheets */}
       <DropModal />
       <CreateDropSheet />
+      <EditDropSheet />
+      <DeleteDropDialog />
       <ShareModal />
       <AuthModal />
       <MemberProfileModal />

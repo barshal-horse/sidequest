@@ -52,6 +52,10 @@ interface SideQuestStore {
   registeredProfiles: UserProfile[];
   recentCreatedDropCoords: { lat: number; lng: number; dropId: string } | null;
   hasCompletedOnboarding: boolean;
+  isEditDialogOpen: boolean;
+  editingDrop: Drop | null;
+  deletingDropId: string | null;
+  deletedDropIds: string[];
   
   // Actions
   setHasCompletedOnboarding: (completed: boolean) => void;
@@ -61,6 +65,11 @@ interface SideQuestStore {
   setSelectedCategory: (cat: DropCategory | 'ALL') => void;
   toggleGirlsOnlyFilter: () => void;
   setActiveDropId: (id: string | null) => void;
+  setEditingDrop: (drop: Drop | null) => void;
+  setDeletingDropId: (id: string | null) => void;
+  updateDrop: (dropId: string, updates: Partial<Drop>) => boolean;
+  deleteDrop: (dropId: string) => boolean;
+  reportDrop: (dropId: string) => void;
   sendDropMessage: (dropId: string, text: string) => void;
   setUserLocation: (loc: UserLocation | null) => void;
   setLocationModalOpen: (open: boolean) => void;
@@ -120,9 +129,15 @@ export const useSideQuestStore = create<SideQuestStore>()(
       activeTab: 'radar',
       recentCreatedDropCoords: null,
       hasCompletedOnboarding: false,
+      isEditDialogOpen: false,
+      editingDrop: null,
+      deletingDropId: null,
+      deletedDropIds: [],
 
       setHasCompletedOnboarding: (completed: boolean) => set({ hasCompletedOnboarding: completed }),
       clearRecentCreatedDropCoords: () => set({ recentCreatedDropCoords: null }),
+      setEditingDrop: (drop: Drop | null) => set({ editingDrop: drop, isEditDialogOpen: Boolean(drop) }),
+      setDeletingDropId: (id: string | null) => set({ deletingDropId: id }),
 
       syncWithServer: async () => {
         try {
@@ -131,15 +146,32 @@ export const useSideQuestStore = create<SideQuestStore>()(
           const data = await res.json();
           if (data.drops && Array.isArray(data.drops)) {
             set(state => {
+              // Extract all deletedDropIds
+              const serverDeleted: string[] = data.deletedDropIds || [];
+              const combinedDeleted = new Set([...state.deletedDropIds, ...serverDeleted]);
+
+              // Filter out any drops that are deleted
+              const nonDeletedServerDrops: Drop[] = data.drops.filter((d: Drop) => !combinedDeleted.has(d.id));
+
               // Create lookup of incoming server drops
-              const serverDropMap = new Map<string, Drop>(data.drops.map((d: Drop) => [d.id, d]));
+              const serverDropMap = new Map<string, Drop>(nonDeletedServerDrops.map((d: Drop) => [d.id, d]));
               
-              // Update existing drops with latest server status, keep local unsynced drops
-              const updatedExisting = state.drops.map(d => serverDropMap.get(d.id) || d);
+              // Filter out local drops that are deleted
+              const nonDeletedLocalDrops = state.drops.filter(d => !combinedDeleted.has(d.id));
+
+              // Update existing drops with latest server status, preserving local optimistic updates if newer
+              const updatedExisting = nonDeletedLocalDrops.map(localDrop => {
+                const remote = serverDropMap.get(localDrop.id);
+                if (!remote) return localDrop;
+                if (localDrop.lastModified && remote.lastModified && new Date(localDrop.lastModified) > new Date(remote.lastModified)) {
+                  return localDrop;
+                }
+                return remote;
+              });
               
               // Find new server drops that client doesn't have yet
-              const existingIds = new Set(state.drops.map(d => d.id));
-              const brandNewServerDrops = data.drops.filter((d: Drop) => !existingIds.has(d.id));
+              const existingIds = new Set(nonDeletedLocalDrops.map(d => d.id));
+              const brandNewServerDrops = nonDeletedServerDrops.filter((d: Drop) => !existingIds.has(d.id));
 
               const mergedDrops = [...brandNewServerDrops, ...updatedExisting];
 
@@ -147,6 +179,10 @@ export const useSideQuestStore = create<SideQuestStore>()(
               const mergedChats: Record<string, ChatMessage[]> = { ...state.dropChats };
               if (data.dropChats) {
                 Object.entries(data.dropChats as Record<string, ChatMessage[]>).forEach(([dropId, msgs]) => {
+                  if (combinedDeleted.has(dropId)) {
+                    delete mergedChats[dropId];
+                    return;
+                  }
                   const localMsgs = mergedChats[dropId] || [];
                   const seenMsgIds = new Set(localMsgs.map(m => m.id));
                   const newFromRemote = msgs.filter(m => !seenMsgIds.has(m.id));
@@ -158,7 +194,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
 
               return {
                 drops: mergedDrops,
-                dropChats: mergedChats
+                dropChats: mergedChats,
+                deletedDropIds: Array.from(combinedDeleted)
               };
             });
           }
@@ -179,6 +216,97 @@ export const useSideQuestStore = create<SideQuestStore>()(
       toggleGirlsOnlyFilter: () => set(state => ({ isGirlsOnlyFilter: !state.isGirlsOnlyFilter })),
       
       setActiveDropId: (id) => set({ activeDropId: id }),
+
+      updateDrop: (dropId: string, updates: Partial<Drop>) => {
+        const user = get().currentUser;
+        const target = get().drops.find(d => d.id === dropId);
+        if (!target) return false;
+
+        // Security check: Only host can edit
+        if (target.host.id !== user.id && target.host.handle !== user.handle) {
+          alert('🛡️ Only the squad host can edit this flare.');
+          return false;
+        }
+
+        const updatedDrop: Drop = {
+          ...target,
+          ...updates,
+          lastModified: new Date().toISOString()
+        };
+
+        set(state => ({
+          drops: state.drops.map(d => d.id === dropId ? updatedDrop : d),
+          editingDrop: null,
+          isEditDialogOpen: false
+        }));
+
+        // Broadcast to backend
+        fetch('/api/drops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            dropId,
+            updates,
+            userId: user.id,
+            userHandle: user.handle
+          })
+        }).catch(() => {});
+
+        return true;
+      },
+
+      deleteDrop: (dropId: string) => {
+        const user = get().currentUser;
+        const target = get().drops.find(d => d.id === dropId);
+        if (!target) return false;
+
+        // Security check: Only host can delete
+        if (target.host.id !== user.id && target.host.handle !== user.handle) {
+          alert('🛡️ Only the squad host can delete this flare.');
+          return false;
+        }
+
+        set(state => {
+          const nextChats = { ...state.dropChats };
+          delete nextChats[dropId];
+          return {
+            drops: state.drops.filter(d => d.id !== dropId),
+            dropChats: nextChats,
+            activeDropId: state.activeDropId === dropId ? null : state.activeDropId,
+            deletingDropId: null,
+            editingDrop: state.editingDrop?.id === dropId ? null : state.editingDrop,
+            isEditDialogOpen: state.editingDrop?.id === dropId ? false : state.isEditDialogOpen,
+            deletedDropIds: [...state.deletedDropIds, dropId]
+          };
+        });
+
+        // Broadcast to backend
+        fetch('/api/drops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'delete',
+            dropId,
+            userId: user.id,
+            userHandle: user.handle
+          })
+        }).catch(() => {});
+
+        return true;
+      },
+
+      reportDrop: (dropId: string) => {
+        set(state => ({
+          drops: state.drops.map(d => d.id === dropId ? { ...d, isReported: true } : d)
+        }));
+
+        fetch('/api/drops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'report', dropId })
+        }).catch(() => {});
+      },
 
       setUserLocation: (loc) => set({ userLocation: loc }),
 
@@ -672,7 +800,8 @@ export const useSideQuestStore = create<SideQuestStore>()(
         userLocation: state.userLocation,
         dropChats: state.dropChats,
         registeredProfiles: state.registeredProfiles,
-        hasCompletedOnboarding: state.hasCompletedOnboarding
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
+        deletedDropIds: state.deletedDropIds
       })
     }
   )

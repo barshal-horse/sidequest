@@ -5,7 +5,7 @@ import { useSideQuestStore } from '@/lib/store';
 import { 
   X, MapPin, Clock, Users, Sparkles, Send, Share2, 
   CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Navigation, Compass,
-  QrCode, ScanLine
+  QrCode, ScanLine, MoreVertical, Pencil, Trash2, Flag, Shield
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { 
@@ -17,6 +17,13 @@ import { playRadarBlip, playCheckInChime } from '@/lib/audio';
 import { DropMember } from '@/types';
 import SquadQrModal from './SquadQrModal';
 import { trackEvent } from '@/lib/analytics';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/DropdownMenu';
 
 export default function DropModal() {
   const { 
@@ -33,10 +40,14 @@ export default function DropModal() {
     userLocation,
     setLocationCoords,
     dropChats,
-    sendDropMessage
+    sendDropMessage,
+    setEditingDrop,
+    setDeletingDropId,
+    reportDrop
   } = useSideQuestStore();
 
   const [messageText, setMessageText] = useState('');
+  const [modalToast, setModalToast] = useState<string | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const [isVerifyingGps, setIsVerifyingGps] = useState(false);
@@ -233,13 +244,13 @@ export default function DropModal() {
         <div className="relative p-4 sm:p-5 border-b border-[#24242B] bg-[#141418]">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#CCFF00] text-[#0A0A0C]">
                   {drop.category}
                 </span>
                 {drop.isGirlsOnly && (
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#FF007A]/20 text-[#FF007A] border border-[#FF007A]/40 flex items-center gap-1">
-                    🌸 Girls Only
+                    <Shield className="w-3 h-3" /> Girls Only
                   </span>
                 )}
                 <span className="flex items-center gap-1 text-[11px] font-mono text-[#FF0055]">
@@ -252,13 +263,76 @@ export default function DropModal() {
               </p>
             </div>
             
-            <button
-              onClick={() => setActiveDropId(null)}
-              className="p-1.5 rounded-lg text-[#8E8E9F] hover:text-[#F4F4F6] hover:bg-[#24242B] transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {/* Contextual Action Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-1.5 rounded-lg text-[#8E8E9F] hover:text-[#F4F4F6] hover:bg-[#24242B] transition-colors focus:outline-none focus:ring-1 focus:ring-[#CCFF00]"
+                    title="Flare Options"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isHost ? (
+                    <>
+                      <DropdownMenuItem onClick={() => setEditingDrop(drop)}>
+                        <Pencil className="w-3.5 h-3.5 text-[#00F0FF]" />
+                        <span>Edit Flare</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="danger"
+                        onClick={() => setDeletingDropId(drop.id)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Extinguish / Delete</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => openShareModal(drop)}>
+                        <Share2 className="w-3.5 h-3.5 text-[#CCFF00]" />
+                        <span>Share Signal</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem onClick={() => openShareModal(drop)}>
+                        <Share2 className="w-3.5 h-3.5 text-[#CCFF00]" />
+                        <span>Share Signal</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="danger"
+                        onClick={() => {
+                          reportDrop(drop.id);
+                          setModalToast('Report submitted. Thank you for keeping SideQuest safe.');
+                          setTimeout(() => setModalToast(null), 4000);
+                        }}
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                        <span>Report Flare</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <button
+                onClick={() => setActiveDropId(null)}
+                className="p-1.5 rounded-lg text-[#8E8E9F] hover:text-[#F4F4F6] hover:bg-[#24242B] transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
+
+          {modalToast && (
+            <div className="mt-2 p-2 rounded-lg bg-[#00F0FF]/15 border border-[#00F0FF]/40 text-[#00F0FF] text-[11px] font-mono flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{modalToast}</span>
+            </div>
+          )}
         </div>
 
         {/* Scrollable Body */}

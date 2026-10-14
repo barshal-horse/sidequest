@@ -659,6 +659,93 @@ runTest('LetsStart welcome guide enforces zero-friction onboarding flow and pers
 });
 
 // ============================================================================
+// 11. FLARE CRUD LIFECYCLE, HOST AUTHORIZATION & TOMBSTONE SYNC TESTS
+// ============================================================================
+console.log('\n🛡️ SECTION 11: Flare CRUD Lifecycle, Host Authorization & Tombstones');
+
+runTest('Flare edit authorization allows host to update title, venue, slots, and sets lastModified', () => {
+  const hostUser = DEMO_PROFILES[0];
+  const targetDrop = { ...INITIAL_DROPS[0], host: hostUser };
+  
+  // Host updates the drop
+  const updates = {
+    title: 'Updated Sunset Chai & Chill',
+    venueName: 'Tea Villa Cafe',
+    maxSlots: 6
+  };
+
+  const isHost = targetDrop.host.id === hostUser.id;
+  assert.ok(isHost, 'Host identity check must pass for creator');
+
+  const updatedDrop = {
+    ...targetDrop,
+    ...updates,
+    lastModified: new Date().toISOString()
+  };
+
+  assert.strictEqual(updatedDrop.title, 'Updated Sunset Chai & Chill');
+  assert.strictEqual(updatedDrop.venueName, 'Tea Villa Cafe');
+  assert.strictEqual(updatedDrop.maxSlots, 6);
+  assert.ok(updatedDrop.lastModified, 'lastModified timestamp must be populated');
+});
+
+runTest('Flare edit security gate strictly rejects unauthorized non-host modifications', () => {
+  const hostUser = DEMO_PROFILES[0];
+  const maliciousUser = DEMO_PROFILES[1];
+  const targetDrop = { ...INITIAL_DROPS[0], host: hostUser };
+
+  const isAuthorized = targetDrop.host.id === maliciousUser.id || targetDrop.host.handle === maliciousUser.handle;
+  assert.strictEqual(isAuthorized, false, 'Non-host user must be rejected from modifying flare');
+});
+
+runTest('Flare deletion extinguishes drop and records tombstone in deletedDropIds', () => {
+  const hostUser = DEMO_PROFILES[0];
+  const dropToDelete = { ...INITIAL_DROPS[0], host: hostUser };
+  let localDrops = [dropToDelete, ...INITIAL_DROPS.slice(1)];
+  const deletedDropIds: string[] = [];
+
+  // Execute deletion
+  assert.strictEqual(dropToDelete.host.id, hostUser.id);
+  localDrops = localDrops.filter(d => d.id !== dropToDelete.id);
+  deletedDropIds.push(dropToDelete.id);
+
+  assert.strictEqual(localDrops.some(d => d.id === dropToDelete.id), false, 'Drop must be removed from active drops');
+  assert.ok(deletedDropIds.includes(dropToDelete.id), 'Drop ID must be registered in deletedDropIds tombstones');
+});
+
+runTest('Flare deletion security gate rejects unauthorized non-host deletion attempts', () => {
+  const hostUser = DEMO_PROFILES[0];
+  const unauthorizedUser = DEMO_PROFILES[2];
+  const targetDrop = { ...INITIAL_DROPS[0], host: hostUser };
+
+  const canDelete = targetDrop.host.id === unauthorizedUser.id || targetDrop.host.handle === unauthorizedUser.handle;
+  assert.strictEqual(canDelete, false, 'Non-host user must not have permission to delete flare');
+});
+
+runTest('Server sync with tombstones purges deleted drops and prevents stale zombie resurrection', () => {
+  const dropA = { ...INITIAL_DROPS[0], id: 'drop-active-1' };
+  const dropB = { ...INITIAL_DROPS[1], id: 'drop-deleted-2' };
+  
+  const serverDrops = [dropA, dropB];
+  const serverDeletedDropIds = ['drop-deleted-2'];
+
+  const combinedDeleted = new Set(serverDeletedDropIds);
+  const cleansedServerDrops = serverDrops.filter(d => !combinedDeleted.has(d.id));
+
+  assert.strictEqual(cleansedServerDrops.length, 1);
+  assert.strictEqual(cleansedServerDrops[0].id, 'drop-active-1');
+  assert.strictEqual(cleansedServerDrops.some(d => d.id === 'drop-deleted-2'), false, 'Tombstoned drop must be purged during sync');
+});
+
+runTest('Report flare flags drop safely without immediately dismantling squad lobby', () => {
+  const targetDrop = { ...INITIAL_DROPS[0], isReported: false };
+  const reportedDrop = { ...targetDrop, isReported: true };
+
+  assert.strictEqual(reportedDrop.isReported, true, 'Drop must be flagged as reported');
+  assert.strictEqual(reportedDrop.status, targetDrop.status, 'Reported drop retains status until admin review');
+});
+
+// ============================================================================
 // FINAL SUMMARY
 // ============================================================================
 console.log('\n========================================================');

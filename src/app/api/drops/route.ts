@@ -7,11 +7,13 @@ import { INITIAL_DROPS, INITIAL_DROP_CHATS } from '@/lib/constants';
 // stay synchronized instantaneously in real-time.
 let serverDrops: Drop[] = [...INITIAL_DROPS];
 let serverDropChats: Record<string, ChatMessage[]> = { ...INITIAL_DROP_CHATS };
+let serverDeletedDropIds = new Set<string>();
 
 export async function GET() {
   return NextResponse.json({
     drops: serverDrops,
     dropChats: serverDropChats,
+    deletedDropIds: Array.from(serverDeletedDropIds),
     timestamp: Date.now()
   });
 }
@@ -169,17 +171,95 @@ export async function POST(request: Request) {
       });
     }
 
-    if (action === 'chat') {
-      const { message } = body as { message: ChatMessage };
-      if (message && message.dropId) {
-        serverDropChats[message.dropId] = [...(serverDropChats[message.dropId] || []), message];
+    if (action === 'update') {
+      const { dropId, updates, userId, userHandle } = body;
+      const target = serverDrops.find(d => d.id === dropId);
+      if (!target) {
+        return NextResponse.json({ error: 'Drop not found' }, { status: 404 });
+      }
+
+      // Security check: only host can update
+      if (userId && target.host.id !== userId && target.host.handle !== userHandle) {
+        return NextResponse.json({ error: 'Unauthorized: only the squad host can edit this flare' }, { status: 403 });
+      }
+
+      // Apply allowable updates
+      if (updates.title) target.title = updates.title.trim();
+      if (updates.venueName) target.venueName = updates.venueName.trim();
+      if (updates.hotspotName) target.hotspotName = updates.hotspotName.trim();
+      if (updates.category) target.category = updates.category;
+      if (typeof updates.maxSlots === 'number') {
+        target.maxSlots = Math.max(target.members.length, Math.min(12, updates.maxSlots));
+      }
+      if (updates.expiresAt) target.expiresAt = updates.expiresAt;
+      if (typeof updates.isGirlsOnly === 'boolean') target.isGirlsOnly = updates.isGirlsOnly;
+      if (typeof updates.lat === 'number' && typeof updates.lng === 'number') {
+        target.lat = updates.lat;
+        target.lng = updates.lng;
+      }
+      target.lastModified = new Date().toISOString();
+
+      const updateNotice: ChatMessage = {
+        id: `msg-sys-${Date.now()}`,
+        dropId,
+        userId: userId || target.host.id,
+        handle: userHandle || target.host.handle,
+        fullName: target.host.fullName,
+        avatarUrl: target.host.avatarUrl,
+        text: `✏️ Flare updated: "${target.title}" at ${target.venueName}`,
+        timestamp: 'Just now',
+        isSystem: true
+      };
+
+      serverDropChats[dropId] = [...(serverDropChats[dropId] || []), updateNotice];
+
+      return NextResponse.json({
+        success: true,
+        action: 'update',
+        drop: target,
+        drops: serverDrops,
+        dropChats: serverDropChats
+      });
+    }
+
+    if (action === 'delete') {
+      const { dropId, userId, userHandle } = body;
+      const target = serverDrops.find(d => d.id === dropId);
+      if (!target) {
+        return NextResponse.json({ error: 'Drop not found' }, { status: 404 });
+      }
+
+      // Security check: only host can delete
+      if (userId && target.host.id !== userId && target.host.handle !== userHandle) {
+        return NextResponse.json({ error: 'Unauthorized: only the squad host can delete this flare' }, { status: 403 });
+      }
+
+      // Remove from serverDrops and record tombstone
+      serverDrops = serverDrops.filter(d => d.id !== dropId);
+      serverDeletedDropIds.add(dropId);
+      delete serverDropChats[dropId];
+
+      return NextResponse.json({
+        success: true,
+        action: 'delete',
+        deletedDropId: dropId,
+        drops: serverDrops,
+        dropChats: serverDropChats,
+        deletedDropIds: Array.from(serverDeletedDropIds)
+      });
+    }
+
+    if (action === 'report') {
+      const { dropId } = body;
+      const target = serverDrops.find(d => d.id === dropId);
+      if (target) {
+        target.isReported = true;
       }
 
       return NextResponse.json({
         success: true,
-        action: 'chat',
-        drops: serverDrops,
-        dropChats: serverDropChats
+        action: 'report',
+        dropId
       });
     }
 
